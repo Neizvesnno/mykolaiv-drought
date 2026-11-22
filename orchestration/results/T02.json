@@ -1,0 +1,42 @@
+{
+  "task_id": "T02",
+  "status": "done",
+  "summary": "Створено .venv (Python 3.13.15), встановлено 11 пакетів, requirements.txt з == лише для прямих залежностей, src/check_env.py. Агрегований OPeNDAP URL з config.py не працює (HTTP 200 з порожнім тілом, netCDF4 дає Errno -72); працює доступ через річні файли TERRACLIMATE_ALL/data/TerraClimate_PDSI_<рік>.nc, де змінна зветься PDSI. config.py потребує виправлення (не в моїх outputs).",
+  "files": [
+    {"path": "requirements.txt", "purpose": "11 прямих залежностей з точними версіями", "committed": false},
+    {"path": "src/check_env.py", "purpose": "Імпорт пакетів, версії, перевірка OPeNDAP (спочатку URL з config, потім річні файли)", "committed": false}
+  ],
+  "checks": [
+    {"criterion_id": "A1", "passed": true, "evidence": ".venv/bin/python src/check_env.py: усі 11 пакетів імпортуються (xarray 2026.9.0, netCDF4 1.7.5.1.post1, pandas 3.1.1, numpy 2.5.5, geopandas 1.2.0, shapely 2.2.0, pyogrio 0.13.0, regionmask 0.13.0, matplotlib 3.11.2, requests 2.34.2, jsonschema 4.26.0)"},
+    {"criterion_id": "A2", "passed": true, "evidence": "requirements.txt: 11 рядків виду pkg==ver, без транзитивних залежностей"},
+    {"criterion_id": "A3", "passed": true, "evidence": "Агрегований URL з config: curl .dds -> HTTP 200, Content-Length 0; xarray -> OSError Errno -72. Через річні файли: PDSI dims=(time,lat,lon), рік = 12x4143x10800, перший місяць 1958-01 (файл 1958), останній місяць 2025-12 (файл 2025). Критерій виконано запасним шляхом, не URL з config."}
+  ],
+  "facts": [
+    {"claim": "Агрегований endpoint agg_terraclimate_{pdsi|PDSI|ppt}_1958_CurrentYear_GLOBE.nc.dds на thredds.northwestknowledge.net:8080 повертає HTTP 200 з порожнім тілом 22.11.2026", "source": "curl -i на .dds і .das, xarray OSError -72", "verified": true},
+    {"claim": "Каталог TERRACLIMATE_ALL/data містить по 228 річних файлів для кожної з 14 змінних (PDSI, ppt, soil, aet, def, ...), файли PDSI_1950..PDSI_2025; файлів за 2026 немає", "source": "http://thredds.northwestknowledge.net:8080/thredds/catalog/TERRACLIMATE_ALL/data/catalog.xml", "verified": true},
+    {"claim": "Річний файл PDSI 2025 має 12 місяців, сітка 4143 lat x 10800 lon, тип Int16; останній місяць 2025-12, тож LAST_COMPLETE_YEAR=2025 підтверджено", "source": "DDS TerraClimate_PDSI_2025.nc та вивід check_env.py", "verified": true},
+    {"claim": "У річних файлах змінна PDSI пишеться великими літерами, ppt і soil малими", "source": "DDS TerraClimate_PDSI_2025.nc, TerraClimate_ppt_2025.nc; каталог файлів", "verified": true}
+  ],
+  "issues": [
+    "config.py: TERRACLIMATE_OPENDAP (агрегація 1958_CurrentYear) не працює. Потрібен шаблон на річні файли: http://thredds.northwestknowledge.net:8080/thredds/dodsC/TERRACLIMATE_ALL/data/TerraClimate_{var}_{year}.nc, і VARIABLES має використовувати ключ PDSI замість pdsi. Я config.py не змінював (поза outputs).",
+    "Значення Supervisor'а 'THREDDS відповідає HTTP 200' вводить в оману: 200 повертається і з порожнім тілом.",
+    "Завантаження 1958-2025 означає 68 запитів на змінну; зі сіткою 4143x10800 треба робити підвибірку за BBOX_DOWNLOAD (isel/sel по lat/lon) до .load(), інакше трафік величезний.",
+    "Варіанти ХТТР vs fileServer не перевірялись; можливо знадобиться як запасний шлях для T04.",
+    "У check_env.py використано pandas 3.1.1 і xarray 2026.9.0 (найновіші на момент установки); версії зафіксовано в requirements.txt."
+  ],
+  "handoff": [
+    "Python тільки .venv/bin/python; залежності: pip install -r requirements.txt.",
+    "T04: брати дані з річних файлів, URL: http://thredds.northwestknowledge.net:8080/thredds/dodsC/TERRACLIMATE_ALL/data/TerraClimate_{var}_{year}.nc, роки 1958..2025. Імена змінних: PDSI (великі), ppt, soil. Координати lat спадають чи зростають не перевірялось: використовуй .sel зі slice відповідно до напряму.",
+    "Сітка: 4143 x 10800 (крок ~1/24 градуса), time = 12 місяців на файл, останній місяць 2025-12.",
+    "Supervisor має виправити config.py (TERRACLIMATE_OPENDAP і VARIABLES) до T04, або доручити це T04.",
+    "src/check_env.py має імпорт 'sys.path.insert', щоб запускатися як скрипт з кореня."
+  ],
+  "commands_run": [
+    "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m venv .venv",
+    ".venv/bin/pip install xarray netCDF4 pandas numpy geopandas shapely pyogrio regionmask matplotlib requests jsonschema",
+    ".venv/bin/pip show <pkg> для версій у requirements.txt",
+    ".venv/bin/python src/check_env.py",
+    "curl .dds/.das агрегованого URL; curl catalog.xml THREDDS; curl .dds річних файлів PDSI/ppt 2024-2025",
+    "python3 orchestration/validate.py T02"
+  ]
+}

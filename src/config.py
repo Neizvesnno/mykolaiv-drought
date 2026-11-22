@@ -67,14 +67,17 @@ BBOX_DOWNLOAD = {
 }
 
 # Шаблон OPeNDAP-адреси TerraClimate; {var} — ім'я змінної.
+# Річні файли: агрегований файл agg_terraclimate_*_CurrentYear на сервері віддає
+# порожню відповідь (перевірено 22.11.2026, задача T02), а річні файли працюють.
 TERRACLIMATE_OPENDAP = (
     "http://thredds.northwestknowledge.net:8080/thredds/dodsC/"
-    "agg_terraclimate_{var}_1958_CurrentYear_GLOBE.nc"
+    "TERRACLIMATE_ALL/data/TerraClimate_{var}_{year}.nc"
 )
 
 # Змінні TerraClimate, які використовуємо.
+# Ключ = точна назва змінної на сервері (PDSI великими літерами, решта малими).
 VARIABLES = {
-    "pdsi": "індекс посухи Палмера",
+    "PDSI": "індекс посухи Палмера, без одиниць",
     "ppt": "опади, мм/міс",
     "soil": "вологість ґрунту, мм",
 }

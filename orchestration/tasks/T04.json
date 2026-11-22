@@ -10,7 +10,7 @@
     "src/config.py",
     "src/check_env.py"
   ],
-  "instructions": "Напиши src/download.py: для змінних pdsi, ppt, soil відкриває TerraClimate OPeNDAP, вирізає bbox_download (увага: напрямок осі lat може бути спадним), завантажує всі місяці з 1958 і зберігає в data/raw/terraclimate_<var>.nc. Якщо файл уже є — пропускає (ідемпотентність), прапор --force перезавантажує. Перевір, що scale_factor/add_offset застосовані (PDSI зазвичай у межах приблизно -10..10, опади ≥ 0). Визнач останній повний рік і останній місяць. Надрукуй підсумок: розмір сітки, крок, період, частка NaN по кожній змінній (над морем NaN — це нормально).",
+  "instructions": "Напиши src/download.py: для змінних pdsi, ppt, soil відкриває річні файли TerraClimate OPeNDAP (по одному на рік, 1958..LAST_COMPLETE_YEAR), вирізає bbox_download (увага: напрямок осі lat може бути спадним), завантажує всі місяці з 1958 і зберігає в data/raw/terraclimate_<var>.nc. Якщо файл уже є — пропускає (ідемпотентність), прапор --force перезавантажує. Перевір, що scale_factor/add_offset застосовані (PDSI зазвичай у межах приблизно -10..10, опади ≥ 0). Визнач останній повний рік і останній місяць. Надрукуй підсумок: розмір сітки, крок, період, частка NaN по кожній змінній (над морем NaN — це нормально).",
   "acceptance": [
     {
       "id": "A1",
@@ -24,8 +24,8 @@
     },
     {
       "id": "A3",
-      "check": "Крок сітки ≈ 1/24° (0,0417)",
-      "how": "diff координат"
+      "check": "Крок сітки визначено з даних і записано (сервер показує 1/30° ≈ 0,0333°, документація — 1/24°)",
+      "how": "diff координат lat/lon у завантаженому файлі"
     },
     {
       "id": "A4",
@@ -40,7 +40,7 @@
   ],
   "outputs": [
     "src/download.py",
-    "data/raw/terraclimate_pdsi.nc",
+    "data/raw/terraclimate_PDSI.nc",
     "data/raw/terraclimate_ppt.nc",
     "data/raw/terraclimate_soil.nc"
   ],

@@ -43,9 +43,9 @@
       "lat_min": 46.0,
       "lat_max": 48.5
     },
-    "terraclimate_opendap": "http://thredds.northwestknowledge.net:8080/thredds/dodsC/agg_terraclimate_{var}_1958_CurrentYear_GLOBE.nc",
+    "terraclimate_opendap": "http://thredds.northwestknowledge.net:8080/thredds/dodsC/TERRACLIMATE_ALL/data/TerraClimate_{var}_{year}.nc",
     "variables": {
-      "pdsi": "індекс посухи Палмера",
+      "PDSI": "індекс посухи Палмера",
       "ppt": "опади, мм/міс",
       "soil": "вологість ґрунту, мм"
     },
@@ -58,7 +58,9 @@
       "docs": "docs",
       "src": "src",
       "config": "src/config.py"
-    }
+    },
+    "last_complete_year": 2025,
+    "grid_step_deg": "1/30 (визначено з даних на сервері 22.11.2026; у документації TerraClimate 1/24)"
   },
   "queue": [
     {
@@ -78,8 +80,8 @@
       "depends_on": [
         "T01"
       ],
-      "status": "pending",
-      "attempts": 0
+      "status": "done",
+      "attempts": 1
     },
     {
       "id": "T07",
@@ -89,8 +91,8 @@
       "depends_on": [
         "T01"
       ],
-      "status": "pending",
-      "attempts": 0
+      "status": "in_progress",
+      "attempts": 1
     },
     {
       "id": "T03",
@@ -276,6 +278,22 @@
       "task": "T01",
       "event": "done",
       "supervisor_check": "Сам перевірив: папки, git check-ignore для data/raw, .venv, __pycache__; config збігається з shared. Виправив LAST_COMPLETE_YEAR: було date.today()-1 (невідтворювано), стало фіксоване 2025, підтвердить T04."
+    },
+    {
+      "time": "2026-11-22T23:21",
+      "task": "T02",
+      "event": "start (спроба 1)"
+    },
+    {
+      "time": "2026-11-22T23:21",
+      "task": "T07",
+      "event": "start (спроба 1)"
+    },
+    {
+      "time": "2026-11-22T23:24",
+      "task": "T02",
+      "event": "done",
+      "supervisor_check": "Сам перевірив: агрегований .dds = 0 байт, річний PDSI_2025 відкривається, lat спадна, вирізка bbox 75x114, PDSI липень 2025 від -7,5 до -3,8. Виявив крок 1/30° замість 1/24°. Виправив config (шаблон {var}_{year}, ключ PDSI) і критерій T04 A3."
     }
   ]
 }
