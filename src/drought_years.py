@@ -94,7 +94,24 @@ def period_stats(table, y0, y1):
         "one_year_in_confirmed": one_in_n(k_conf, n),
         "years_list_pdsi": [int(y) for y in sub[sub.drought_pdsi].year],
         "years_list_confirmed": [int(y) for y in sub[sub.category == CAT_CONFIRMED].year],
+        # Найсуворіша перевірка: лише опади, бо тільки вони незалежні від PDSI.
+        "drought_years_confirmed_by_ppt": int(sub.confirmed_by_ppt.sum()),
+        "one_year_in_confirmed_by_ppt": one_in_n(int(sub.confirmed_by_ppt.sum()), n),
     }
+
+
+def confirmed_by(row):
+    """Яка ознака підтверджує посуху: 'опади', 'ґрунт', 'обидва' або '' (не підтверджена).
+
+    Вологість ґрунту в TerraClimate рахується з тієї самої моделі водного балансу,
+    що й PDSI (опади мінус випаровування). Тому «підтвердження лише ґрунтом» —
+    частково той самий сигнал. Справді незалежна ознака тут тільки опади.
+    """
+    if row.category != CAT_CONFIRMED:
+        return ""
+    if row.ppt_dry and row.soil_dry:
+        return "обидва"
+    return "опади" if row.ppt_dry else "ґрунт"
 
 
 def main():
@@ -111,6 +128,8 @@ def main():
     t["ppt_dry"] = t.ppt_anom_pct <= PPT_ANOM_MAX_PCT  # правило категорії
     t["soil_dry"] = t.soil_anom_pct <= SOIL_ANOM_MAX_PCT
     t["category"] = t.apply(categorize, axis=1)
+    t["confirmed_by"] = t.apply(confirmed_by, axis=1)
+    t["confirmed_by_ppt"] = t.confirmed_by.isin(["опади", "обидва"])
     for s in SENSITIVITY_THRESHOLDS:
         t[f"drought_le_{s}"] = t.pdsi <= s
     t.round(4).to_csv(OUT_CSV, index=False)
@@ -228,6 +247,11 @@ def main():
             "text_confirmed": f"{n_conf} з {n_all} сезонів: 1 рік із {one_in_n(n_conf, n_all)} (підтверджені)",
         },
         "categories": cat_lists,
+        "confirmed_by": {
+            k: [int(y) for y in t[t.confirmed_by == k].year] for k in ["опади", "обидва", "ґрунт"]
+        },
+        "confirmed_by_note": ("Ґрунт і PDSI в TerraClimate — з однієї моделі водного балансу, "
+                              "тому незалежне підтвердження дають лише опади ('опади' + 'обидва')."),
         "class_counts_pdsi_drought_years": {k: int(v) for k, v in d.pdsi_class.value_counts().items()},
         "periods": periods,
         "cross_check": cross,
