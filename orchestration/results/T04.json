@@ -1,0 +1,41 @@
+{
+  "task_id": "T04",
+  "status": "done",
+  "summary": "Створено src/download.py: для PDSI, ppt, soil з річних файлів TerraClimate (OPeNDAP, 1958..2025, 68 запитів на змінну, 4 потоки, повтор із паузою) вирізано bbox і збережено в data/raw/terraclimate_<var>.nc (zlib, float32). Сітка 75x114, крок 1/30 градуса, період 1958-01..2025-12 (816 місяців), частка NaN 7,0% (море). Повторний запуск пропускає всі файли (0,9 с).",
+  "files": [
+    {"path": "src/download.py", "purpose": "Завантаження і об'єднання річних файлів TerraClimate з ідемпотентністю та --force", "committed": false},
+    {"path": "data/raw/terraclimate_PDSI.nc", "purpose": "PDSI 1958-01..2025-12, bbox, 13,6 МБ", "committed": false},
+    {"path": "data/raw/terraclimate_ppt.nc", "purpose": "Місячні опади (мм) 1958-01..2025-12, bbox, 10,4 МБ", "committed": false},
+    {"path": "data/raw/terraclimate_soil.nc", "purpose": "Вологість ґрунту (мм) 1958-01..2025-12, bbox, 9,9 МБ", "committed": false}
+  ],
+  "checks": [
+    {"criterion_id": "A1", "passed": true, "evidence": "xarray.open_dataset: три файли в data/raw/, time[0]=1958-01-01, time[-1]=2025-12-01, 816 кроків, монотонно зростає"},
+    {"criterion_id": "A2", "passed": true, "evidence": "Останній місяць у даних 2025-12; останній повний сезон квітень-вересень 2025 (LAST_COMPLETE_YEAR=2025 підтверджено, файлів за 2026 на сервері немає за T02). Середній PDSI квітень-вересень 2025 по bbox = -6.19"},
+    {"criterion_id": "A3", "passed": true, "evidence": "Крок з np.diff(lat/lon) у завантаженому файлі: lat -0.03333, lon +0.03333, тобто 1/30 градуса (не 1/24). Сітка 75 lat x 114 lon, lat від 48.483 до 46.017 (спадна)"},
+    {"criterion_id": "A4", "passed": true, "evidence": "PDSI min=-8.38 max=7.04 (масштаб застосовано, не сотні); ppt min=0.00 max=232.80; soil min=5.00 max=190.00; середня річна сума ppt по bbox 465 мм (правдоподібно для півдня України)"},
+    {"criterion_id": "A5", "passed": true, "evidence": "Повторний запуск: «terraclimate_<var>.nc вже є, пропускаю» для всіх трьох, час 0,9 с"}
+  ],
+  "facts": [
+    {"claim": "Крок сітки TerraClimate у завантажених даних 1/30 градуса (0,03333)", "source": "np.diff(lat), np.diff(lon) у data/raw/terraclimate_PDSI.nc", "verified": true},
+    {"claim": "Вісь lat на сервері спадна; вибірка slice(lat_max, lat_min)", "source": "data/raw/terraclimate_PDSI.nc: lat[0]=48.483, lat[-1]=46.017 (збережено в порядку сервера)", "verified": true},
+    {"claim": "Перша спроба завантаження була перервана (процес зник посеред ppt) і перезапущена; повторний запуск пропустив готовий PDSI і завершив ppt та soil без помилок і без повторів запитів", "source": "/tmp/t04.log, /tmp/t04b.log", "verified": true}
+  ],
+  "issues": [
+    "Handoff T02 стверджує крок 1/24 градуса; фактично 1/30 (виправлено в даних і тут).",
+    "Під час завантаження netCDF4/HDF5 друкує в консоль шум 'HDF5-DIAG ... unable to open file tmp_...' з потоків; на результат не вплинув (усі 68 років, 12 місяців, жодного повтору). Імовірна причина: netcdf-c не повністю потокобезпечний для OPeNDAP.",
+    "Середній PDSI квітень-вересень 2025 по bbox дорівнює -6,19 (дуже сильна посуха); це не помилка завантаження, але T05+ варто це врахувати при перевірці карти."
+  ],
+  "handoff": [
+    "Файли data/raw/terraclimate_PDSI.nc (змінна PDSI), terraclimate_ppt.nc (ppt, мм/міс), terraclimate_soil.nc (soil, мм); float32, _FillValue=NaN, scale_factor уже застосовано.",
+    "Розмірності (time, lat, lon): 816 x 75 x 114; time = перші числа місяців 1958-01-01..2025-12-01; lat СПАДНА (48.483..46.017), lon зростає (29.817..33.583), крок 1/30 градуса.",
+    "NaN ~7,0% клітинок (море/поза сушею), однаково для всіх змінних; використовуй skipna і маску суші.",
+    "Останній місяць у даних 2025-12, останній повний сезон квітень-вересень 2025; LAST_COMPLETE_YEAR=2025.",
+    "Вибірка сезону: ds.sel(time=ds.time.dt.month.isin(config.SEASON_MONTHS)).",
+    "Запуск: .venv/bin/python src/download.py (повне завантаження ~10 хв на 3 змінні), --force для перезавантаження."
+  ],
+  "commands_run": [
+    ".venv/bin/python src/download.py (двічі: завантаження, потім повторний запуск для перевірки ідемпотентності)",
+    ".venv/bin/python -I -c <перевірка координат, діапазонів, часу>",
+    "python3 orchestration/validate.py T04"
+  ]
+}
