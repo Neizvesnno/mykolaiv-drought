@@ -1,0 +1,90 @@
+{
+ "task_id": "T06",
+ "status": "done",
+ "summary": "Написано src/drought_years.py. За PDSI<=-2 посушливих років 21 з 68 (1 рік із 3,2); підтверджених опадами/ґрунтом 19 (1 рік із 3,6); інерційні 1989 і 2008. 1958-1990: 5 років (1 із 6,6), 1991-2025: 16 (1 із 2,2). Просторово посуха загальнообласна: частота по клітинках 26,5-36,8%, частіше в Первомайському (35,2%) і на півночі (32,8% проти 30,5% на півдні). sanity_check.md містить статус збіг/розбіжність для кожного року з T07.",
+ "files": [
+  {
+   "path": "src/drought_years.py",
+   "purpose": "Посушливі роки, категорії, частота по клітинках, райони, періоди, чутливість",
+   "committed": false
+  },
+  {
+   "path": "data/processed/drought_years.csv",
+   "purpose": "68 років: pdsi, pdsi_class, аномалії, category, прапорці порогів -1.5 і -3",
+   "committed": false
+  },
+  {
+   "path": "data/processed/drought_frequency.nc",
+   "purpose": "Частота посухи, кількість років, середній PDSI сухих років по клітинках, індекс району",
+   "committed": false
+  },
+  {
+   "path": "data/processed/summary.json",
+   "purpose": "Числа для слайдів: for_farmers, periods, cross_check, sensitivity, spatial",
+   "committed": false
+  },
+  {
+   "path": "docs/sanity_check.md",
+   "purpose": "Наш список проти docs/sanity_sources.md, правило категорій, чутливість, просторові відмінності",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "drought_years.csv: 68 рядків, колонки pdsi_class (помірна 8, сильна 8, екстремальна 5 серед 21 року) і category."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "summary.json periods: 1958-1990 5 з 33 (1 із 6,6; підтверджених 4); 1991-2025 16 з 35 (1 із 2,2; підтверджених 15)."
+  },
+  {
+   "criterion_id": "A3",
+   "passed": true,
+   "evidence": "summary.json cross_check: з 21 року опади<0 у 18, ґрунт<0 у 20, ґрунт<=-20% у 15; опади вище норми: 1989, 1990, 2008. У csv колонки ppt_negative, soil_dry, category."
+  },
+  {
+   "criterion_id": "A4",
+   "passed": true,
+   "evidence": "docs/sanity_check.md: таблиця з 2007, 2012, 2020, 2024, 2025 (збіг), 1996, 2000-2003, 2013, 1997, 2004, 2016, 2023, 1963/1968 зі статусом і поясненням."
+  },
+  {
+   "criterion_id": "A5",
+   "passed": true,
+   "evidence": "summary.json sensitivity: поріг -1,5 дає 25 років, -2 дає 21, -3 дає 13, зі списками років."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "21 рік із PDSI<=-2 з 68; 19 підтверджених, 2 інерційні (1989, 2008)",
+   "source": "data/processed/drought_years.csv, summary.json",
+   "verified": true
+  },
+  {
+   "claim": "Середня частота посухи по районах: Первомайський 35,2%, Вознесенський 33,4%, Миколаївський 30,7%, Баштанський 29,1%",
+   "source": "data/processed/summary.json (spatial.rayons)",
+   "verified": true
+  }
+ ],
+ "issues": [
+  "1990 за правилом Supervisor'а підтверджена (ґрунт -31%), хоча опади +23%; якщо вважати лише опади, була б інерційною. Зазначено в sanity_check.md.",
+  "2013 має PDSI -1,993 і 1995 -1,954, тобто на межі порогу; результат чутливий до порогу.",
+  "Просторова різниця мала (~6 в.п. між районами, 26,5-36,8% по клітинках); інтерпретувати як слабку.",
+  "Для 2009, 2014, 2018-2019, 2022 незалежних джерел немає (не шукались у T07), розбіжністю не вважаються.",
+  "Райони за центром клітинки; сума клітинок районів може відрізнятись від 2651."
+ ],
+ "handoff": [
+  "summary.json: for_farmers (drought_years_pdsi=21, drought_years_confirmed=19, text_pdsi, text_confirmed), periods, cross_check, sensitivity, spatial.rayons, categories.",
+  "drought_years.csv колонки: year, pdsi, ppt_anom_pct, soil_anom_pct, area_share_pdsi_le_-2, drought_pdsi, pdsi_class, ppt_negative, soil_dry, category (підтверджена/інерційна/немає), drought_le_-1.5, drought_le_-3.0.",
+  "drought_frequency.nc: drought_years_count, drought_frequency (0..1), mean_pdsi_drought_years, drought_frequency_confirmed_years, rayon_index (імена в attrs), land_mask; dims lat, lon. Для карти брати drought_frequency.",
+  "Просторово: частіше на півночі (Первомайський, Вознесенський), корелляція з широтою +0,43, але відмінності малі. Площа в посусі = 1,0 у 11 із 21 років.",
+  "Для слайдів: «1 рік із 3,2» (PDSI), «1 із 3,6» (підтверджені); 1958-1990 «1 із 6,6», 1991-2025 «1 із 2,2». Не називати 2008 справжньою посухою: опади +26%."
+ ],
+ "commands_run": [
+  ".venv/bin/python src/drought_years.py",
+  ".venv/bin/python -I (перегляд років)",
+  "python3 orchestration/validate.py T06"
+ ]
+}
