@@ -32,11 +32,15 @@ import xarray as xr
 from src import config
 
 # --- Правило категорії (config-стиль; змінюється лише тут) ---
-# 'підтверджена': PDSI <= порогу І (аномалія опадів < PPT_ANOM_MAX_PCT
+# 'підтверджена': PDSI <= порогу І (аномалія опадів <= PPT_ANOM_MAX_PCT
 #                 АБО аномалія вологості ґрунту <= SOIL_ANOM_MAX_PCT).
-# 'інерційна':    PDSI <= порогу, але опади вище норми і ґрунт не сухий.
+# 'інерційна':    PDSI <= порогу, але ні опади, ні ґрунт не показують посухи:
+#                 індекс «пам'ятає» попередні сухі роки.
 # 'немає':        PDSI > порогу.
-PPT_ANOM_MAX_PCT = 0.0      # опади нижчі за норму = строго менше 0 %
+# Обидва пороги однакові (-20 %). Спершу для опадів стояло «< 0 %», але тоді
+# 2015 і 2023 вважались посухою лише через опади на 12–13 % нижче норми при
+# нормальному ґрунті (рішення Павла 23.11.2026, див. prompts.md, сесія 3).
+PPT_ANOM_MAX_PCT = -20.0    # опади сухі = на 20 % і більше нижче норми
 SOIL_ANOM_MAX_PCT = -20.0   # ґрунт сухий = на 20 % і більше нижче норми
 CAT_CONFIRMED, CAT_INERTIAL, CAT_NONE = "підтверджена", "інерційна", "немає"
 
@@ -66,7 +70,7 @@ def pdsi_class(v):
 def categorize(row):
     if row.pdsi > config.DROUGHT_THRESHOLD_PDSI:
         return CAT_NONE
-    if row.ppt_anom_pct < PPT_ANOM_MAX_PCT or row.soil_anom_pct <= SOIL_ANOM_MAX_PCT:
+    if row.ppt_anom_pct <= PPT_ANOM_MAX_PCT or row.soil_anom_pct <= SOIL_ANOM_MAX_PCT:
         return CAT_CONFIRMED
     return CAT_INERTIAL
 
@@ -103,7 +107,8 @@ def main():
             "area_share_pdsi_le_-2"]].copy()
     t["drought_pdsi"] = t.pdsi <= thr
     t["pdsi_class"] = t.pdsi.map(pdsi_class)
-    t["ppt_negative"] = t.ppt_anom_pct < PPT_ANOM_MAX_PCT
+    t["ppt_negative"] = t.ppt_anom_pct < 0       # опис: опади нижче норми взагалі
+    t["ppt_dry"] = t.ppt_anom_pct <= PPT_ANOM_MAX_PCT  # правило категорії
     t["soil_dry"] = t.soil_anom_pct <= SOIL_ANOM_MAX_PCT
     t["category"] = t.apply(categorize, axis=1)
     for s in SENSITIVITY_THRESHOLDS:
@@ -210,9 +215,9 @@ def main():
         "n_years": n_all,
         "threshold_pdsi": thr,
         "category_rule": {
-            "confirmed": f"PDSI <= {thr} і (аномалія опадів < {PPT_ANOM_MAX_PCT}% "
+            "confirmed": f"PDSI <= {thr} і (аномалія опадів <= {PPT_ANOM_MAX_PCT}% "
                          f"або аномалія вологості ґрунту <= {SOIL_ANOM_MAX_PCT}%)",
-            "inertial": "PDSI <= порогу, але опади >= норми і ґрунт не сухий за правилом",
+            "inertial": "PDSI <= порогу, але ні опади, ні ґрунт не сухі за правилом",
             "none": "PDSI > порогу",
         },
         "for_farmers": {

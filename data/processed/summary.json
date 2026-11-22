@@ -3,16 +3,16 @@
   "n_years": 68,
   "threshold_pdsi": -2.0,
   "category_rule": {
-    "confirmed": "PDSI <= -2.0 і (аномалія опадів < 0.0% або аномалія вологості ґрунту <= -20.0%)",
-    "inertial": "PDSI <= порогу, але опади >= норми і ґрунт не сухий за правилом",
+    "confirmed": "PDSI <= -2.0 і (аномалія опадів <= -20.0% або аномалія вологості ґрунту <= -20.0%)",
+    "inertial": "PDSI <= порогу, але ні опади, ні ґрунт не сухі за правилом",
     "none": "PDSI > порогу"
   },
   "for_farmers": {
     "drought_years_pdsi": 21,
-    "drought_years_confirmed": 19,
-    "inertial_years": 2,
+    "drought_years_confirmed": 17,
+    "inertial_years": 4,
     "text_pdsi": "21 з 68 сезонів: 1 рік із 3.2 (за PDSI)",
-    "text_confirmed": "19 з 68 сезонів: 1 рік із 3.6 (підтверджені)"
+    "text_confirmed": "17 з 68 сезонів: 1 рік із 4.0 (підтверджені)"
   },
   "categories": {
     "підтверджена": [
@@ -27,18 +27,18 @@
       2009,
       2012,
       2014,
-      2015,
       2018,
       2019,
       2020,
       2022,
-      2023,
       2024,
       2025
     ],
     "інерційна": [
       1989,
-      2008
+      2008,
+      2015,
+      2023
     ],
     "немає": [
       1958,
@@ -125,9 +125,9 @@
       "drought_years_pdsi": 16,
       "share_pdsi_pct": 46,
       "one_year_in_pdsi": 2.2,
-      "drought_years_confirmed": 15,
-      "share_confirmed_pct": 43,
-      "one_year_in_confirmed": 2.3,
+      "drought_years_confirmed": 13,
+      "share_confirmed_pct": 37,
+      "one_year_in_confirmed": 2.7,
       "years_list_pdsi": [
         1992,
         1994,
@@ -154,12 +154,10 @@
         2009,
         2012,
         2014,
-        2015,
         2018,
         2019,
         2020,
         2022,
-        2023,
         2024,
         2025
       ]
