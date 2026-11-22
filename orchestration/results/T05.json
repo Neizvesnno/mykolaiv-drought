@@ -1,0 +1,37 @@
+{
+  "task_id": "T05",
+  "status": "done",
+  "summary": "Написано src/season.py. Маска regionmask (центр клітинки у полігоні): 2726 клітинок, з них 2651 суша з даними, 75 клітинок води (NaN, лиман/море) виключено. Для 68 повних сезонів 1958..2025 пораховано pdsi, ppt_mm, soil_mm та аномалії по клітинках (season_cells.nc) і середні по області з вагою cos(lat) (season_oblast.csv). 2025: PDSI -6,34, опади -34% і ґрунт -55% від норми 1991-2020, частка площі PDSI<=-2 = 100%. Контроль через shapely збігся (|Δ|=0,00000).",
+  "files": [
+    {"path": "src/season.py", "purpose": "Маска області, сезонні агрегати, аномалії, зважене середнє, контрольний перерахунок", "committed": false},
+    {"path": "data/processed/season_cells.nc", "purpose": "pdsi, ppt_mm, soil_mm, ppt_anom_pct, soil_anom_pct (year, lat, lon) + land_mask; поза сушею області NaN", "committed": false},
+    {"path": "data/processed/season_oblast.csv", "purpose": "68 рядків: year, pdsi, ppt_mm, soil_mm, ppt_anom_pct, soil_anom_pct, area_share_pdsi_le_-2", "committed": false}
+  ],
+  "checks": [
+    {"criterion_id": "A1", "passed": true, "evidence": "Читання season_cells.nc: кількість NaN усередині land_mask для pdsi, ppt_mm, soil_mm, ppt_anom_pct, soil_anom_pct = 0 у всіх 68 роках. Клітинки води (75) виключені з маски за тлумаченням Supervisor'а (суша = дані в усі роки)."},
+    {"criterion_id": "A2", "passed": true, "evidence": "season_oblast.csv: 68 рядків, year 1958..2025, сезон 2026 не включено (дані закінчуються 2025-12)."},
+    {"criterion_id": "A3", "passed": true, "evidence": "Центр у полігоні: 2726; суша з даними: 2651; вода: 75 (збережено в атрибутах season_cells.nc). Незалежна перевірка shapely.contains_xy дає 2651 клітинок з даними у 2025. Площа 2651 клітинок за геометрією сітки ≈ 24 697 км² проти офіційних 24 598 (+0,4%) і 25 301 у контурі OSM з водою."},
+    {"criterion_id": "A4", "passed": true, "evidence": "Рік 2025: основний (regionmask) PDSI = -6.3411, перерахунок точками-в-полігоні (shapely.contains_xy, cos(lat)) = -6.3411, |Δ|=0.00000 < 0.05. Скрипт має assert на цей допуск."}
+  ],
+  "facts": [
+    {"claim": "Середній PDSI квітень-вересень 2025 по області (суша, ваги cos(lat)) = -6.34; найсильніші роки: 2025 (-6.34), 2007 (-5.92), 2020 (-5.73), 2024 (-4.20), 2009 (-4.11)", "source": "data/processed/season_oblast.csv", "verified": true},
+    {"claim": "Аномалії 2025: опади -34.4%, вологість ґрунту -54.8% від норми 1991-2020; частка площі з PDSI<=-2 у 2024 і 2025 дорівнює 1.0", "source": "data/processed/season_oblast.csv", "verified": true},
+    {"claim": "Середнє PDSI по рамці bbox (-6.19, T04) відрізняється від -6.34 по області, бо область і рамка різні території", "source": "порівняння T04 handoff і season_oblast.csv", "verified": true}
+  ],
+  "issues": [
+    "Контрольний перерахунок використовує ті самі ваги cos(lat) і ті самі дані, змінюється лише спосіб маскування; це перевірка маски, а не ваг.",
+    "Аномалії рахуються по клітинці відносно її власної норми; в області вони є зваженим середнім клітинкових аномалій, а не аномалією середнього. Для клітинок з дуже малою нормою це могло б роздути %, але тут норма сезонних опадів і ґрунту суттєво більша за нуль.",
+    "Маска за центром клітинки: клітинки на межі можуть бути віднесені неточно (допустимо за кроку 1/30°)."
+  ],
+  "handoff": [
+    "season_cells.nc: змінні pdsi, ppt_mm (сума квітень-вересень, мм), soil_mm (середнє, мм), ppt_anom_pct, soil_anom_pct (% від норми 1991-2020), land_mask (int8, 1 = суша області); dims year (1958..2025), lat (спадна), lon; NaN поза land_mask. Кількості клітинок в attrs: n_cells_center_in_polygon=2726, n_cells_land=2651, n_cells_water_excluded=75.",
+    "season_oblast.csv: колонки year, pdsi, ppt_mm, soil_mm, ppt_anom_pct, soil_anom_pct, area_share_pdsi_le_-2 (частка 0..1, а не %). Ваги cos(lat) лише по клітинках суші.",
+    "Для карт брати season_cells.nc; для рядів і порівняння періодів season_oblast.csv. Площу області в підсумках вказувати ≈24 700 км² (суша за клітинками) або офіційні 24 598, не 25 301 з OSM.",
+    "Запуск: .venv/bin/python src/season.py з кореня. regionmask.mask потрібно давати numpy-масиви lon/lat, а не DataArray."
+  ],
+  "commands_run": [
+    ".venv/bin/python src/season.py (кілька запусків, перші два впали через переплутаний порядок lat/lon у виклику маски, виправлено)",
+    ".venv/bin/python -I -c <перевірка NaN, років, площі, діапазонів>",
+    "python3 orchestration/validate.py T05"
+  ]
+}
