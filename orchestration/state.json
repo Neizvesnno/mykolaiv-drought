@@ -91,7 +91,7 @@
       "depends_on": [
         "T01"
       ],
-      "status": "in_progress",
+      "status": "done",
       "attempts": 1
     },
     {
@@ -102,8 +102,8 @@
       "depends_on": [
         "T02"
       ],
-      "status": "pending",
-      "attempts": 0
+      "status": "in_progress",
+      "attempts": 1
     },
     {
       "id": "T04",
@@ -113,8 +113,8 @@
       "depends_on": [
         "T02"
       ],
-      "status": "pending",
-      "attempts": 0
+      "status": "in_progress",
+      "attempts": 1
     },
     {
       "id": "T05",
@@ -294,6 +294,22 @@
       "task": "T02",
       "event": "done",
       "supervisor_check": "Сам перевірив: агрегований .dds = 0 байт, річний PDSI_2025 відкривається, lat спадна, вирізка bbox 75x114, PDSI липень 2025 від -7,5 до -3,8. Виявив крок 1/30° замість 1/24°. Виправив config (шаблон {var}_{year}, ключ PDSI) і критерій T04 A3."
+    },
+    {
+      "time": "2026-11-22T23:24",
+      "task": "T03",
+      "event": "start (спроба 1)"
+    },
+    {
+      "time": "2026-11-22T23:24",
+      "task": "T04",
+      "event": "start (спроба 1)"
+    },
+    {
+      "time": "2026-11-22T23:27",
+      "task": "T07",
+      "event": "done",
+      "supervisor_check": "Вибірково перевірив 4 джерела окремим агентом (Радіо Свобода 2012, Укрінформ 2020, Nikvesti, Frontiers SPEI): усі твердження підтверджені. Уточнив: 22->16 ц/га у 2012 — по Україні; у Nikvesti в URL '2024', але стаття від 07.11.2025 про врожай 2025; станції в статті SPEI не з Миколаївщини."
     }
   ]
 }

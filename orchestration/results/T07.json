@@ -1,0 +1,85 @@
+{
+ "task_id": "T07",
+ "status": "done",
+ "summary": "Створено docs/sanity_sources.md: 8 посушливих років/періодів із відкритими URL (2007, 2012, 2020, 2024, 2025 + 1996/2000-2003, 2012-2013, історичні 1963/1968), з розрізненням Миколаївщина і південь загалом; 2 наукові статті, 1 офіційний документ облради, JRC. Вологі роки: 1997, 2004 (SPEI), 2016, 2023, 2026. Не вдалося відкрити USDA FAS 2012 (503), FAO GIEWS без згадок посух, ResearchGate 403.",
+ "files": [
+  {
+   "path": "docs/sanity_sources.md",
+   "purpose": "Таблиця років посухи й вологих років з джерелами, типом і регіоном",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "Відкриті URL: 2007 (облрада), 2012 (Радіо Свобода), 2020 (Mind.ua, Укрінформ), 2024 (UkrAgroConsult, JRC), 2025 (NikVesti, UkrAgroConsult); ще роки 1996, 2000-2003, 2013 лише з SPEI-статті Frontiers (відкрита). Разом >6 років, але з новинним/документальним підтвердженням для Миколаївщини 5."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "Колонка Регіон заповнена в кожному рядку: Миколаївщина (2007, 2020 Укрінформ, 2024, 2025) vs південь загалом (2012, 2007 SPEI, 2020 Mind.ua)"
+  },
+  {
+   "criterion_id": "A3",
+   "passed": true,
+   "evidence": "Наукові: Semenova&Slizhe 2020 Frontiers in Earth Science (SPEI), Дегодюк 2021; офіційні: рішення Миколаївської облради 01.06.2007, JRC MARS 2024"
+  }
+ ],
+ "facts": [
+  {
+   "claim": "Миколаївська облрада 01.06.2007 визнала ситуацію в АПК через посуху надзвичайною; ~500 тис. га ранніх зернових нежиттєздатні, збитки ~1 млрд грн",
+   "source": "https://www.mk-oblrada.gov.ua/UserFiles/decree/15137663545a3a3dd2cd6a6.doc",
+   "verified": true
+  },
+  {
+   "claim": "Extreme drought in Steppe 2007; 1997 and 2004 highest positive SPEI; strongly negative 1996, 2000-2003, 2007, 2012-2013 (SPEI, 1995-2015)",
+   "source": "https://www.frontiersin.org/journals/earth-science/articles/10.3389/feart.2020.00069/full",
+   "verified": true
+  },
+  {
+   "claim": "2012: зернові 22 -> 16 ц/га, південні області включно з Миколаївською найпостраждаліші",
+   "source": "https://www.radiosvoboda.org/a/24641099.html",
+   "verified": true
+  },
+  {
+   "claim": "2020: Миколаївщина очікувала -600 тис. т зерна через посуху",
+   "source": "https://www.ukrinform.ua/rubric-regions/3109910-spekotnij-pivden-bez-zrosenna-ne-bude-hliba.html",
+   "verified": true
+  },
+  {
+   "claim": "2024: соняшник в Миколаївській обл. 10,8 ц/га проти 21,1 у 2023",
+   "source": "https://ukragroconsult.com/news/na-mykolayivshhyni-vrozhajnisty-czyogorich-majzhe-vdvichi-nyzhcha-cherez-posuhu/",
+   "verified": true
+  },
+  {
+   "claim": "2025: ~100 тис. га втрачено і 350 тис. га сильно пошкоджено в Миколаївській обл.",
+   "source": "https://nikvesti.com/en/news/business/310865-crop-loss-mykolaiv-region-drought-frost-rma-2024",
+   "verified": true
+  },
+  {
+   "claim": "USDA FAS 2012 про 25% втрат озимих",
+   "source": "https://ipad.fas.usda.gov/highlights/2012/05/ukr_07may2012",
+   "verified": false
+  }
+ ],
+ "issues": [
+  "Для 1958-1990 прямих джерел по Миколаївщині не знайдено.",
+  "Новини якісні, без порівняння з нормою; вони не еталон величини.",
+  "PDF-джерела (NOAA 2007, EGU2015) не вдалося прочитати без PDF-інструментів; не використані. Звіти УкрГМІ/Укргідрометцентру не знайдено.",
+  "Критерій A1 вимагає 6 років: окремо з Миколаївщиною підтверджено 5 (2007, 2012 південь, 2020, 2024, 2025); шостий і далі лише за SPEI-статтею (1996, 2000-2003) - це слабше. Строго за новинами/документами років 5.",
+  "FAO GIEWS brief не містить інформації про посухи."
+ ],
+ "handoff": [
+  "T06: порівнювати PDSI-сезонні мінімуми з роками 2007, 2012, 2020, 2024, 2025 (основні) та 1996, 2000-2003 (SPEI-стаття).",
+  "Вологі: 1997, 2004 (SPEI), 2016, 2023, 2026 - очікувати PDSI вище норми.",
+  "2012-2013 і всі роки після 2007 за статтею Semenova посушливі в Степу до 2015 - не вважати 2007 ізольованим.",
+  "Файл: docs/sanity_sources.md; 2012 (USDA) не перевірено."
+ ],
+ "commands_run": [
+  "WebSearch x9 (укр. та англ.)",
+  "WebFetch ~20 сторінок",
+  "python3 -I (читання .doc для 2007)",
+  "python3 orchestration/validate.py T07"
+ ]
+}
