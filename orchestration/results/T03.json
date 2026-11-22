@@ -1,0 +1,45 @@
+{
+  "task_id": "T03",
+  "status": "done",
+  "summary": "Межі області і 4 районів (Баштанський, Вознесенський, Миколаївський, Первомайський) отримано з OSM через Overpass і збережено в GeoJSON EPSG:4326. Площа області 25 300 км² (повна геометрія), у критерії 24 000–25 500, але на ~700 км² більша за офіційну 24 598, бо контур OSM включає територіальні води. geoBoundaries і GADM дають старі райони.",
+  "files": [
+    {"path": "src/boundaries.py", "purpose": "Overpass-запит із повторами, збирання полігонів, площі в EPSG:6933, спрощення 0,0005°, GeoJSON і картинка", "committed": false},
+    {"path": "data/boundaries/mykolaiv_oblast.geojson", "purpose": "Контур області, поля name, osm_id, source, license, area_km2_full, area_km2_simplified", "committed": false},
+    {"path": "data/boundaries/mykolaiv_rayons.geojson", "purpose": "4 райони з тими самими полями", "committed": false},
+    {"path": "figures/check_boundaries.png", "purpose": "Контрольна картинка: область і райони з підписами", "committed": false},
+    {"path": "data/raw/overpass_mykolaiv_boundaries.json", "purpose": "Кеш сирої відповіді Overpass (недовірені дані)", "committed": false}
+  ],
+  "checks": [
+    {"criterion_id": "A1", "passed": true, "evidence": "EPSG:6933: область 25299.93 км² до спрощення, 25301.00 після. У діапазоні 24000-25500, але на 2,9% більша за офіційні 24598 (територіальні води, див. issues)."},
+    {"criterion_id": "A2", "passed": true, "evidence": "Рівно 4 райони: Баштанський район 6705.8, Вознесенський район 6149.0, Миколаївський район 8648.5, Первомайський район 3796.6 км²; множина назв збігається з очікуваною (вивід boundaries.py)."},
+    {"criterion_id": "A3", "passed": true, "evidence": "Об'єднання районів 25300.8 км² проти області 25301.0 км² (спрощені), різниця 0.00%."},
+    {"criterion_id": "A4", "passed": true, "evidence": "У кожному feature properties: source='OpenStreetMap via Overpass API (overpass-api.de)', license='ODbL 1.0, © OpenStreetMap contributors'."}
+  ],
+  "facts": [
+    {"claim": "geoBoundaries gbOpen UKR ADM2: 495 одиниць, boundaryYearRepresented 2006, джерело Wikimedia Commons, ліцензія Public Domain, тобто старі райони, не підходить", "source": "https://www.geoboundaries.org/api/current/gbOpen/UKR/ADM2/", "verified": true},
+    {"claim": "В OSM у межах relation ISO3166-2=UA-48 є рівно 4 relation-и admin_level=6 з назвами Баштанський/Вознесенський/Миколаївський/Первомайський район", "source": "Overpass API, запит у src/boundaries.py, 22.11.2026", "verified": true},
+    {"claim": "Дані OSM поширюються за ліцензією ODbL 1.0, потрібна атрибуція © OpenStreetMap contributors", "source": "повідомлення в відповіді Overpass: 'made available under ODbL'", "verified": true},
+    {"claim": "Площі: область 25299.9 км² (повна), 25301.0 (спрощена, допуск 0,0005°); спрощення змінює площу менше ніж на 0,01%", "source": "src/boundaries.py, EPSG:6933", "verified": true},
+    {"claim": "Офіційна площа області ≈24 598 км²", "source": "дано Supervisor'ом, не перевірялась мною", "verified": false}
+  ],
+  "issues": [
+    "Контур OSM виходить у Чорне море (південна межа ~46.35°N) і, ймовірно, включає прибережні води та частину лиманів; тому площа 25 300 км² проти офіційних 24 598. Для маски клітинок TerraClimate це неважливо (у морі немає даних), але для площ у км² у звіті краще брати суші/клітинки з даними. Окремо суходіл я не обчислював.",
+    "Кінбурнська коса: точка 31.6E 46.55N усередині контуру; детальну перевірку форми коси не робив (спрощення 0,0005° ≈ 50 м її не прибирає).",
+    "Є невелика діра/анклав у районі 32.9E 47.0N (на картинці біла пляма на кордоні з Херсонською областю) і тонкий артефакт на межі Первомайський/Вознесенський біля 31.35E 47.75N; на висновки не впливає.",
+    "Overpass видав HTTP 502 при першій спробі; скрипт повторює запити з подвоєнням паузи й кешує відповідь у data/raw."
+  ],
+  "handoff": [
+    "Файли: data/boundaries/mykolaiv_oblast.geojson (1 об'єкт) і mykolaiv_rayons.geojson (4 об'єкти), CRS EPSG:4326.",
+    "Поля: name (укр.), osm_id, source, license, area_km2_full (до спрощення), area_km2_simplified. Площі в км², EPSG:6933.",
+    "Райони відсортовані за назвою. Для T05+: геометрія спрощена з допуском 0,0005° (~50 м), для маски клітинок ~4 км цього достатньо.",
+    "Площа OSM-контуру завищена через морські води: не використовуй її як 'площу області' в підсумках; брати клітинки TerraClimate, що мають дані.",
+    "В публікації/карті вказати атрибуцію: © OpenStreetMap contributors, ODbL 1.0.",
+    "Запуск: .venv/bin/python src/boundaries.py з кореня; використовує кеш data/raw/overpass_mykolaiv_boundaries.json."
+  ],
+  "commands_run": [
+    "curl https://www.geoboundaries.org/api/current/gbOpen/UKR/ADM2/",
+    "curl Overpass (пробні запити; перший з помилкою синтаксису map_to_area, виправлено)",
+    ".venv/bin/python src/boundaries.py",
+    "python3 orchestration/validate.py T03"
+  ]
+}
