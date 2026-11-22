@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "result.schema.json",
+  "title": "Worker report for one task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "status", "summary", "files", "checks", "facts", "issues", "handoff", "commands_run"],
+  "properties": {
+    "task_id": { "type": "string", "pattern": "^T[0-9]{2}$" },
+    "status": { "type": "string", "enum": ["done", "failed", "blocked"] },
+    "summary": { "type": "string", "minLength": 20, "maxLength": 1500 },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "purpose"],
+        "properties": {
+          "path": { "type": "string" },
+          "purpose": { "type": "string", "minLength": 5 },
+          "committed": { "type": "boolean", "description": "false for gitignored files such as raw data" }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion_id", "passed", "evidence"],
+        "properties": {
+          "criterion_id": { "type": "string", "pattern": "^A[0-9]+$" },
+          "passed": { "type": "boolean" },
+          "evidence": { "type": "string", "minLength": 5, "description": "Command output, numbers or file paths that prove it" }
+        }
+      }
+    },
+    "facts": {
+      "type": "array",
+      "description": "Factual claims the result relies on, each with a source",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "source"],
+        "properties": {
+          "claim": { "type": "string" },
+          "source": { "type": "string", "description": "URL, paper or file:line" },
+          "verified": { "type": "boolean", "description": "true only if the worker opened the source itself" }
+        }
+      }
+    },
+    "issues": { "type": "array", "items": { "type": "string" } },
+    "handoff": { "type": "array", "items": { "type": "string" }, "description": "Notes the next tasks need" },
+    "commands_run": { "type": "array", "items": { "type": "string" } }
+  }
+}

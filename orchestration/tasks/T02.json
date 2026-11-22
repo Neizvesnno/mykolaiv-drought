@@ -1,0 +1,36 @@
+{
+  "id": "T02",
+  "day": "2026-11-22",
+  "role": "env",
+  "title": "Віртуальне середовище, requirements.txt, перевірка OPeNDAP",
+  "depends_on": [
+    "T01"
+  ],
+  "inputs": [
+    "src/config.py"
+  ],
+  "instructions": "Створи .venv через `python3 -m venv .venv` (Python 3.13). Встанови: xarray, netCDF4, pandas, numpy, geopandas, shapely, pyogrio, regionmask, matplotlib, requests, jsonschema. Запиши requirements.txt з точними версіями (==) лише для цих прямих залежностей, не pip freeze цілком. Напиши src/check_env.py: імпортує всі пакети, друкує версії і відкриває через xarray (engine netcdf4) метадані PDSI з TerraClimate OPeNDAP (URL з config), друкує розмір сітки, перший і останній місяць часу. Нічого великого не завантажуй.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Усі пакети імпортуються з .venv",
+      "how": ".venv/bin/python src/check_env.py"
+    },
+    {
+      "id": "A2",
+      "check": "requirements.txt містить лише прямі залежності з ==",
+      "how": "cat requirements.txt"
+    },
+    {
+      "id": "A3",
+      "check": "OPeNDAP відкривається, відомий перший і останній місяць даних",
+      "how": "вивід check_env.py"
+    }
+  ],
+  "outputs": [
+    "requirements.txt",
+    "src/check_env.py"
+  ],
+  "fallback": "Якщо якийсь пакет не має колеса для 3.13 — зафіксуй в issues і запропонуй версію, що ставиться.",
+  "max_attempts": 2
+}

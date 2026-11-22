@@ -1,0 +1,281 @@
+{
+  "project": "mykolaiv-drought",
+  "goal": "Просторово показати роки посухи в Миколаївській області для фермерів; 4 слайди + методологія + промпти у PDF, до 25.11.2026",
+  "supervisor": "Claude Opus 5.5 (основна сесія)",
+  "workers": "субагенти general-purpose; контракт у orchestration/WORKER.md",
+  "code_authorship": "Код пишуть воркери-AI; Павло переглядає і запускає кожен скрипт",
+  "shared": {
+    "season_months": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "season_label": "квітень–вересень",
+    "drought_threshold_pdsi": -2.0,
+    "pdsi_classes": {
+      "extreme": "<= -4.0",
+      "severe": "-3.99 .. -3.0",
+      "moderate": "-2.99 .. -2.0",
+      "mild": "-1.99 .. -1.0",
+      "normal": "> -1.0"
+    },
+    "normal_period": [
+      1991,
+      2020
+    ],
+    "compare_periods": [
+      [
+        1958,
+        1990
+      ],
+      [
+        1991,
+        "last_complete_year"
+      ]
+    ],
+    "first_year": 1958,
+    "bbox_download": {
+      "lon_min": 29.8,
+      "lon_max": 33.6,
+      "lat_min": 46.0,
+      "lat_max": 48.5
+    },
+    "terraclimate_opendap": "http://thredds.northwestknowledge.net:8080/thredds/dodsC/agg_terraclimate_{var}_1958_CurrentYear_GLOBE.nc",
+    "variables": {
+      "pdsi": "індекс посухи Палмера",
+      "ppt": "опади, мм/міс",
+      "soil": "вологість ґрунту, мм"
+    },
+    "crs": "EPSG:4326",
+    "paths": {
+      "raw": "data/raw",
+      "processed": "data/processed",
+      "boundaries": "data/boundaries",
+      "figures": "figures",
+      "docs": "docs",
+      "src": "src",
+      "config": "src/config.py"
+    }
+  },
+  "queue": [
+    {
+      "id": "T01",
+      "day": "2026-11-22",
+      "role": "repo-setup",
+      "title": "Структура репозиторію, .gitignore, config.py, git init",
+      "depends_on": [],
+      "status": "done",
+      "attempts": 1
+    },
+    {
+      "id": "T02",
+      "day": "2026-11-22",
+      "role": "env",
+      "title": "Віртуальне середовище, requirements.txt, перевірка OPeNDAP",
+      "depends_on": [
+        "T01"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T07",
+      "day": "2026-11-22",
+      "role": "researcher",
+      "title": "Незалежні джерела: які роки вважались посушливими",
+      "depends_on": [
+        "T01"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T03",
+      "day": "2026-11-22",
+      "role": "geodata",
+      "title": "Межі області і 4 районів після реформи 2020",
+      "depends_on": [
+        "T02"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T04",
+      "day": "2026-11-22",
+      "role": "data-download",
+      "title": "Завантаження PDSI, опадів і вологості ґрунту з TerraClimate",
+      "depends_on": [
+        "T02"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T05",
+      "day": "2026-11-22",
+      "role": "analysis",
+      "title": "Сезонні значення квітень–вересень по клітинках і по області",
+      "depends_on": [
+        "T03",
+        "T04"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T06",
+      "day": "2026-11-22",
+      "role": "analysis",
+      "title": "Посушливі роки, частота, перевірка вологістю ґрунту і джерелами",
+      "depends_on": [
+        "T05",
+        "T07"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T08",
+      "day": "2026-11-23",
+      "role": "viz",
+      "title": "Графік по роках з підсвіченими посухами",
+      "depends_on": [
+        "T06"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T09",
+      "day": "2026-11-23",
+      "role": "viz",
+      "title": "Карти найпосушливіших років",
+      "depends_on": [
+        "T06"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T10",
+      "day": "2026-11-23",
+      "role": "viz",
+      "title": "Карта частоти посух",
+      "depends_on": [
+        "T06"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T11",
+      "day": "2026-11-23",
+      "role": "researcher",
+      "title": "Врожайність пшениці по області (Держстат)",
+      "depends_on": [
+        "T06"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T12",
+      "day": "2026-11-23",
+      "role": "viz",
+      "title": "Чернетка 4 слайдів",
+      "depends_on": [
+        "T08",
+        "T09",
+        "T10"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T13",
+      "day": "2026-11-24",
+      "role": "copywriter",
+      "title": "Тексти слайдів простою мовою для фермерів",
+      "depends_on": [
+        "T12"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T14",
+      "day": "2026-11-24",
+      "role": "editor",
+      "title": "PDF з методологією",
+      "depends_on": [
+        "T06"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T15",
+      "day": "2026-11-24",
+      "role": "editor",
+      "title": "PDF з промптами",
+      "depends_on": [
+        "T13",
+        "T14"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T16",
+      "day": "2026-11-24",
+      "role": "editor",
+      "title": "README",
+      "depends_on": [
+        "T14"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T17",
+      "day": "2026-11-24",
+      "role": "qa",
+      "title": "Фінальна перевірка з нуля",
+      "depends_on": [
+        "T13",
+        "T15",
+        "T16"
+      ],
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "T18",
+      "day": "2026-11-24",
+      "role": "supervisor",
+      "title": "Повідомлення Валерію з посиланням",
+      "depends_on": [
+        "T17"
+      ],
+      "status": "pending",
+      "attempts": 0
+    }
+  ],
+  "log": [
+    {
+      "time": "2026-11-22T23:19",
+      "task": "T01",
+      "event": "start (спроба 1)"
+    },
+    {
+      "time": "2026-11-22T23:21",
+      "task": "T01",
+      "event": "done",
+      "supervisor_check": "Сам перевірив: папки, git check-ignore для data/raw, .venv, __pycache__; config збігається з shared. Виправив LAST_COMPLETE_YEAR: було date.today()-1 (невідтворювано), стало фіксоване 2025, підтвердить T04."
+    }
+  ]
+}

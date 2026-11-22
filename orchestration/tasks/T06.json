@@ -1,0 +1,51 @@
+{
+  "id": "T06",
+  "day": "2026-11-22",
+  "role": "analysis",
+  "title": "Посушливі роки, частота, перевірка вологістю ґрунту і джерелами",
+  "depends_on": [
+    "T05",
+    "T07"
+  ],
+  "inputs": [
+    "data/processed/season_oblast.csv",
+    "data/processed/season_cells.nc",
+    "docs/sanity_sources.md"
+  ],
+  "instructions": "Напиши src/drought_years.py: (1) посушливі роки — середній по області PDSI сезону ≤ -2, з класом за Палмером; (2) частота посухи по клітинках (скільки років з N PDSI ≤ -2) у data/processed/drought_frequency.nc; (3) кількість посушливих років у 1958–1990 і 1991–останній, в абсолютних числах і як «1 рік із N»; (4) перехресна перевірка: чи в посушливі за PDSI роки аномалії опадів і вологості ґрунту від'ємні; (5) чутливість: список років при порогах -1,5 і -3. Збережи data/processed/drought_years.csv і data/processed/summary.json. Напиши docs/sanity_check.md: наш список проти docs/sanity_sources.md — збіги, розбіжності і пояснення кожної розбіжності (довга пам'ять PDSI, посуха лише весняна тощо).",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Список посушливих років з класами",
+      "how": "drought_years.csv"
+    },
+    {
+      "id": "A2",
+      "check": "Порівняння двох періодів з числами",
+      "how": "summary.json"
+    },
+    {
+      "id": "A3",
+      "check": "Перехресна перевірка з опадами і вологістю ґрунту",
+      "how": "drought_years.csv"
+    },
+    {
+      "id": "A4",
+      "check": "Кожен рік з джерел T07 має статус збіг/розбіжність з поясненням",
+      "how": "docs/sanity_check.md"
+    },
+    {
+      "id": "A5",
+      "check": "Чутливість до порогу показана",
+      "how": "summary.json"
+    }
+  ],
+  "outputs": [
+    "src/drought_years.py",
+    "data/processed/drought_years.csv",
+    "data/processed/drought_frequency.nc",
+    "data/processed/summary.json",
+    "docs/sanity_check.md"
+  ],
+  "max_attempts": 2
+}

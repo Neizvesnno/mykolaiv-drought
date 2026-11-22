@@ -1,0 +1,26 @@
+{
+  "id": "T17",
+  "day": "2026-11-24",
+  "role": "qa",
+  "title": "Фінальна перевірка з нуля",
+  "depends_on": [
+    "T13",
+    "T15",
+    "T16"
+  ],
+  "inputs": [
+    "README.md"
+  ],
+  "instructions": "Клонувати репо в тимчасову папку, виконати команди з README, порівняти summary.json з оригіналом. Перевірити PDF (до 4 слайдів, відкриваються), посилання, чекліст вимог вакансії з prompts.md.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Результат відтворюється з нуля",
+      "how": "diff summary.json"
+    }
+  ],
+  "outputs": [
+    "docs/qa_report.md"
+  ],
+  "max_attempts": 2
+}

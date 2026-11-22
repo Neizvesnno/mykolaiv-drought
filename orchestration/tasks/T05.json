@@ -1,0 +1,44 @@
+{
+  "id": "T05",
+  "day": "2026-11-22",
+  "role": "analysis",
+  "title": "Сезонні значення квітень–вересень по клітинках і по області",
+  "depends_on": [
+    "T03",
+    "T04"
+  ],
+  "inputs": [
+    "src/config.py",
+    "data/raw/",
+    "data/boundaries/mykolaiv_oblast.geojson"
+  ],
+  "instructions": "Напиши src/season.py: маскує клітинки всередині області (regionmask або геометрія), для кожного повного року рахує по клітинці: середній PDSI за квітень–вересень, суму опадів за сезон, середню вологість ґрунту. Середнє по області — з вагою cos(lat). Аномалії опадів і вологості — у % від норми 1991–2020. Неповний останній сезон не включай. Збережи data/processed/season_cells.nc і data/processed/season_oblast.csv (year, pdsi, ppt_mm, soil_mm, ppt_anom_pct, soil_anom_pct, area_share_pdsi_le_-2). Контроль: для одного року перерахуй середнє по області іншим способом (без маски regionmask, через точки-в-полігоні) і порівняй.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Усередині області немає NaN",
+      "how": "season_cells.nc"
+    },
+    {
+      "id": "A2",
+      "check": "Лише повні сезони, роки 1958..останній повний",
+      "how": "season_oblast.csv"
+    },
+    {
+      "id": "A3",
+      "check": "Кількість клітинок усередині області записана і правдоподібна",
+      "how": "порахувати маску самостійно"
+    },
+    {
+      "id": "A4",
+      "check": "Контрольний перерахунок збігається (|Δ| < 0,05 PDSI)",
+      "how": "звіт воркера + власний перерахунок"
+    }
+  ],
+  "outputs": [
+    "src/season.py",
+    "data/processed/season_cells.nc",
+    "data/processed/season_oblast.csv"
+  ],
+  "max_attempts": 2
+}

@@ -1,0 +1,30 @@
+{
+  "id": "T13",
+  "day": "2026-11-24",
+  "role": "copywriter",
+  "title": "Тексти слайдів простою мовою для фермерів",
+  "depends_on": [
+    "T12"
+  ],
+  "inputs": [
+    "slides/presentation_draft.pdf",
+    "data/processed/summary.json"
+  ],
+  "skills": [
+    "copy-that-sells:copy-that-sells",
+    "humanizer:humanizer"
+  ],
+  "instructions": "Один висновок на слайд, заголовок — сама думка, без «PDSI» в заголовках. Слайд 4 — ризики і що з ними робити, без агрономічних порад, яких дані не підтверджують. Кожне число в тексті звірити з summary.json.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Кожне число в текстах є в summary.json",
+      "how": "звірити"
+    }
+  ],
+  "outputs": [
+    "docs/slide_texts.md",
+    "slides/presentation.pdf"
+  ],
+  "max_attempts": 2
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task.schema.json",
+  "title": "Atomic task for a worker agent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "day", "role", "title", "depends_on", "inputs", "instructions", "acceptance", "outputs"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^T[0-9]{2}$" },
+    "day": { "type": "string", "enum": ["2026-11-22", "2026-11-23", "2026-11-24", "2026-11-25"] },
+    "role": {
+      "type": "string",
+      "enum": ["repo-setup", "env", "geodata", "data-download", "analysis", "researcher", "viz", "copywriter", "editor", "qa", "supervisor"]
+    },
+    "title": { "type": "string", "minLength": 5, "maxLength": 120 },
+    "optional": { "type": "boolean", "default": false },
+    "depends_on": { "type": "array", "items": { "type": "string", "pattern": "^T[0-9]{2}$" }, "uniqueItems": true },
+    "inputs": { "type": "array", "items": { "type": "string" }, "description": "Repo-relative files or URLs the worker reads" },
+    "instructions": { "type": "string", "minLength": 80 },
+    "parameters": { "type": "object", "description": "Fixed method parameters (season, threshold, periods) shared across tasks" },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "check", "how"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^A[0-9]+$" },
+          "check": { "type": "string", "minLength": 10, "description": "What must be true" },
+          "how": { "type": "string", "minLength": 5, "description": "How the supervisor verifies it independently" }
+        }
+      }
+    },
+    "outputs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "skills": { "type": "array", "items": { "type": "string" } },
+    "fallback": { "type": "string" },
+    "max_attempts": { "type": "integer", "minimum": 1, "maximum": 3, "default": 2 }
+  }
+}

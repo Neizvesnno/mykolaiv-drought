@@ -1,0 +1,30 @@
+{
+  "id": "T14",
+  "day": "2026-11-24",
+  "role": "editor",
+  "title": "PDF з методологією",
+  "depends_on": [
+    "T06"
+  ],
+  "inputs": [
+    "src/",
+    "data/processed/summary.json",
+    "docs/sanity_check.md"
+  ],
+  "skills": [
+    "humanizer:humanizer"
+  ],
+  "instructions": "1–2 сторінки: дані і джерела з посиланнями, чому PDSI, чому квітень–вересень, поріг, перевірки, обмеження, як відтворити.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Кожен параметр збігається з src/config.py",
+      "how": "звірити"
+    }
+  ],
+  "outputs": [
+    "docs/methodology.md",
+    "methodology.pdf"
+  ],
+  "max_attempts": 2
+}

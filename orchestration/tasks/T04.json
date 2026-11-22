@@ -1,0 +1,49 @@
+{
+  "id": "T04",
+  "day": "2026-11-22",
+  "role": "data-download",
+  "title": "Завантаження PDSI, опадів і вологості ґрунту з TerraClimate",
+  "depends_on": [
+    "T02"
+  ],
+  "inputs": [
+    "src/config.py",
+    "src/check_env.py"
+  ],
+  "instructions": "Напиши src/download.py: для змінних pdsi, ppt, soil відкриває TerraClimate OPeNDAP, вирізає bbox_download (увага: напрямок осі lat може бути спадним), завантажує всі місяці з 1958 і зберігає в data/raw/terraclimate_<var>.nc. Якщо файл уже є — пропускає (ідемпотентність), прапор --force перезавантажує. Перевір, що scale_factor/add_offset застосовані (PDSI зазвичай у межах приблизно -10..10, опади ≥ 0). Визнач останній повний рік і останній місяць. Надрукуй підсумок: розмір сітки, крок, період, частка NaN по кожній змінній (над морем NaN — це нормально).",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Три файли в data/raw/, час від 1958-01",
+      "how": "xarray.open_dataset"
+    },
+    {
+      "id": "A2",
+      "check": "Відомі останній місяць і останній повний сезон квітень–вересень",
+      "how": "звіт handoff"
+    },
+    {
+      "id": "A3",
+      "check": "Крок сітки ≈ 1/24° (0,0417)",
+      "how": "diff координат"
+    },
+    {
+      "id": "A4",
+      "check": "Значення в правдоподібних межах (PDSI, ppt ≥ 0, soil ≥ 0)",
+      "how": "min/max"
+    },
+    {
+      "id": "A5",
+      "check": "Повторний запуск не завантажує заново",
+      "how": "запустити двічі"
+    }
+  ],
+  "outputs": [
+    "src/download.py",
+    "data/raw/terraclimate_pdsi.nc",
+    "data/raw/terraclimate_ppt.nc",
+    "data/raw/terraclimate_soil.nc"
+  ],
+  "fallback": "Якщо THREDDS не відповідає після 3 спроб — SPEIbase (SPEI-6, 0,5°) у data/raw/ і issue про зміну методу.",
+  "max_attempts": 2
+}

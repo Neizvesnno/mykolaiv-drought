@@ -1,0 +1,29 @@
+{
+  "id": "T15",
+  "day": "2026-11-24",
+  "role": "editor",
+  "title": "PDF з промптами",
+  "depends_on": [
+    "T13",
+    "T14"
+  ],
+  "inputs": [
+    "prompts.md",
+    "orchestration/"
+  ],
+  "skills": [
+    "humanizer:humanizer"
+  ],
+  "instructions": "Перетворити prompts.md на PDF. Промпти дослівно — їх НЕ редагувати; редагувати лише власні пояснення. Заповнити зведення з state.json і results/.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Промпти збігаються з orchestration/prompts/ дослівно",
+      "how": "diff з orchestration/prompts/"
+    }
+  ],
+  "outputs": [
+    "prompts.pdf"
+  ],
+  "max_attempts": 2
+}

@@ -1,0 +1,43 @@
+{
+  "id": "T03",
+  "day": "2026-11-22",
+  "role": "geodata",
+  "title": "Межі області і 4 районів після реформи 2020",
+  "depends_on": [
+    "T02"
+  ],
+  "inputs": [
+    "src/config.py"
+  ],
+  "instructions": "Напиши src/boundaries.py: завантажує межі Миколаївської області та її 4 районів після реформи 17.07.2020 (Баштанський, Вознесенський, Миколаївський, Первомайський) і зберігає в data/boundaries/ як GeoJSON у EPSG:4326. Спершу перевір geoBoundaries (UKR ADM1/ADM2): яка дата/версія ADM2 — старі 19 районів чи нові. GADM має старі райони. Якщо відкритого джерела нових районів немає — збери їх з OpenStreetMap (Overpass, admin_level=6 у межах області). Запиши джерело і ліцензію в properties і в handoff. Збережи контрольну картинку figures/check_boundaries.png (контур області, райони з підписами). Площі рахуй у рівновеликій проєкції (напр. EPSG:6933).",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Площа області 24 000–25 500 км² (офіційно ≈24,6 тис.)",
+      "how": "geopandas у EPSG:6933"
+    },
+    {
+      "id": "A2",
+      "check": "Рівно 4 райони з правильними назвами",
+      "how": "читати GeoJSON"
+    },
+    {
+      "id": "A3",
+      "check": "Об'єднання районів збігається з областю (різниця площ < 2%)",
+      "how": "geopandas union"
+    },
+    {
+      "id": "A4",
+      "check": "Джерело і ліцензія меж записані",
+      "how": "properties / звіт"
+    }
+  ],
+  "outputs": [
+    "src/boundaries.py",
+    "data/boundaries/mykolaiv_oblast.geojson",
+    "data/boundaries/mykolaiv_rayons.geojson",
+    "figures/check_boundaries.png"
+  ],
+  "fallback": "Якщо нових районів не вдається отримати — лише контур області і issue про це.",
+  "max_attempts": 2
+}

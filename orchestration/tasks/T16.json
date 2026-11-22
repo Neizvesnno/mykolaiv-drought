@@ -1,0 +1,28 @@
+{
+  "id": "T16",
+  "day": "2026-11-24",
+  "role": "editor",
+  "title": "README",
+  "depends_on": [
+    "T14"
+  ],
+  "inputs": [
+    "src/",
+    "requirements.txt"
+  ],
+  "skills": [
+    "humanizer:humanizer"
+  ],
+  "instructions": "Що це, результат одним реченням, посилання на 3 PDF, як відтворити (3 команди), структура репо, оркестрація AI коротко.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "3 команди з README відтворюють результат",
+      "how": "перевіряється в задачі T17"
+    }
+  ],
+  "outputs": [
+    "README.md"
+  ],
+  "max_attempts": 2
+}

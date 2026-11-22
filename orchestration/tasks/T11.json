@@ -1,0 +1,26 @@
+{
+  "id": "T11",
+  "day": "2026-11-23",
+  "role": "researcher",
+  "title": "Врожайність пшениці по області (Держстат)",
+  "optional": true,
+  "depends_on": [
+    "T06"
+  ],
+  "inputs": [
+    "data/processed/drought_years.csv"
+  ],
+  "instructions": "Знайди відкриту статистику врожайності озимої пшениці (ц/га) по Миколаївській області за якомога більше років (Держстат, ukrstat). Збережи data/processed/yields.csv з джерелом. Порахуй, на скільки % врожай у посушливі роки нижчий за середній у сусідні непосушливі роки. Без даних — статус blocked, не вигадуй чисел.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Кожне число має джерело",
+      "how": "yields.csv + facts"
+    }
+  ],
+  "outputs": [
+    "data/processed/yields.csv",
+    "docs/yields.md"
+  ],
+  "max_attempts": 2
+}

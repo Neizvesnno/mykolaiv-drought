@@ -1,0 +1,43 @@
+{
+  "task_id": "T01",
+  "status": "done",
+  "summary": "Створено структуру src/, data/{raw,processed,boundaries}, figures/, docs/ з .gitkeep (крім data/raw/), .gitignore, src/__init__.py, src/config.py з усіма параметрами shared і поясненнями, README-заглушку. Виконано git init -b main без комітів.",
+  "files": [
+    {"path": ".gitignore", "purpose": "Ігнорування .venv, data/raw, кешу Python, .DS_Store, checkpoints", "committed": false},
+    {"path": "src/__init__.py", "purpose": "Робить src пакетом для import src.config", "committed": false},
+    {"path": "src/config.py", "purpose": "Константи з state.json shared, пояснення, шляхи через pathlib", "committed": false},
+    {"path": "README.md", "purpose": "Заглушка: назва, одне речення, статус у роботі", "committed": false},
+    {"path": "data/processed/.gitkeep", "purpose": "Утримує порожню папку в git", "committed": false},
+    {"path": "data/boundaries/.gitkeep", "purpose": "Утримує порожню папку в git", "committed": false},
+    {"path": "figures/.gitkeep", "purpose": "Утримує порожню папку в git", "committed": false},
+    {"path": "docs/.gitkeep", "purpose": "Утримує порожню папку в git", "committed": false}
+  ],
+  "checks": [
+    {"criterion_id": "A1", "passed": true, "evidence": "ls: data/{raw,processed,boundaries}, figures, docs, src існують; git check-ignore -v data/raw/x.nc -> .gitignore:2:data/raw/"},
+    {"criterion_id": "A2", "passed": true, "evidence": "git check-ignore -v: .venv/bin/python -> .gitignore:1:.venv/; src/__pycache__/a.pyc -> .gitignore:3:__pycache__/"},
+    {"criterion_id": "A3", "passed": true, "evidence": "python3 -c зі порівнянням з state.json shared: season_months, season_label, threshold, pdsi_classes, normal_period, first_year, bbox, opendap, variables, crs, усі paths -> True. compare_periods = [(1958,1990),(1991,2025)], де 2025 = last_complete_year, обчислений як date.today().year-1"},
+    {"criterion_id": "A4", "passed": true, "evidence": "git status: 'На гілці main', 'Поки що немає комітів'; git branch --show-current -> main"}
+  ],
+  "facts": [
+    {"claim": "1991-2020 як кліматична норма, поріг PDSI -2 як початок помірної посухи, квітень-вересень як вегетація: обґрунтування в коментарях config.py написано зі state.json і загальних знань, не перевірялось за джерелами; ВМО-стандарт норми 30 років не відкривався в цій задачі", "source": "orchestration/state.json shared; src/config.py", "verified": false}
+  ],
+  "issues": [
+    "data/raw/ існує, але порожня, тому git її не відстежує (за завданням без .gitkeep). Скрипти завантаження мають робити RAW_DIR.mkdir(parents=True, exist_ok=True).",
+    "LAST_COMPLETE_YEAR обчислюється динамічно (зараз 2025); T04/T05 мають перевірити, що в TerraClimate є дані за цей рік, інакше зменшити.",
+    "Імпорт створив src/__pycache__, він ігнорується git."
+  ],
+  "handoff": [
+    "Імпорт з кореня: from src.config import ... (запуск python -m або з кореня).",
+    "Імена: SEASON_MONTHS, SEASON_LABEL, DROUGHT_THRESHOLD_PDSI, PDSI_CLASSES, NORMAL_PERIOD (кортеж), FIRST_YEAR, LAST_COMPLETE_YEAR, COMPARE_PERIODS (список кортежів), BBOX_DOWNLOAD (dict lon_min/lon_max/lat_min/lat_max), TERRACLIMATE_OPENDAP (шаблон з {var}), VARIABLES, CRS.",
+    "Шляхи Path: ROOT, RAW_DIR, PROCESSED_DIR, BOUNDARIES_DIR, FIGURES_DIR, DOCS_DIR, SRC_DIR, CONFIG_PATH.",
+    "Нічого не закомічено; git init виконано, перший коміт за Supervisor'ом."
+  ],
+  "commands_run": [
+    "mkdir -p src data/raw data/processed data/boundaries figures docs",
+    "git init -b main",
+    "git check-ignore -v data/raw/x.nc .venv/bin/python src/__pycache__/a.pyc",
+    "python3 (порівняння src.config зі state.json shared)",
+    "git status",
+    "python3 orchestration/validate.py T01"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "T01",
+  "day": "2026-11-22",
+  "role": "repo-setup",
+  "title": "Структура репозиторію, .gitignore, config.py, git init",
+  "depends_on": [],
+  "inputs": [
+    "orchestration/state.json"
+  ],
+  "instructions": "Створи структуру репозиторію в корені проєкту: src/, data/raw/, data/processed/, data/boundaries/, figures/, docs/. Порожні папки, які мають бути в git, позначай файлом .gitkeep (крім data/raw/). Напиши .gitignore: .venv/, data/raw/, __pycache__/, *.pyc, .DS_Store, .ipynb_checkpoints/. Напиши src/config.py: усі параметри з state.json -> shared як константи Python з коментарем-поясненням кожної (чому квітень–вересень, чому поріг -2, чому 1991–2020 як норма), плюс шляхи через pathlib відносно кореня. Напиши README.md-заглушку: назва, одне речення про проєкт, статус «у роботі». Виконай `git init -b main` (без комітів). Не створюй нічого на GitHub.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Усі папки існують, data/raw/ ігнорується git",
+      "how": "ls; git check-ignore data/raw/x.nc"
+    },
+    {
+      "id": "A2",
+      "check": ".venv/ і __pycache__/ ігноруються",
+      "how": "git check-ignore .venv/bin/python"
+    },
+    {
+      "id": "A3",
+      "check": "src/config.py імпортується і значення збігаються з shared",
+      "how": "python3 -c 'import src.config'; порівняти з state.json"
+    },
+    {
+      "id": "A4",
+      "check": "Ініціалізовано git-репозиторій з гілкою main",
+      "how": "git status"
+    }
+  ],
+  "outputs": [
+    ".gitignore",
+    "src/config.py",
+    "src/__init__.py",
+    "README.md"
+  ],
+  "max_attempts": 2
+}
