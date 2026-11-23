@@ -1,0 +1,38 @@
+{
+ "task_id": "T27",
+ "status": "done",
+ "summary": "Розбір табл. 2.6 тепер іде напряму з PDF через pypdf 7.1.1 без .txt і PDFKit; yields.csv байт у байт той самий (md5 4a8440825ea9ac342d345d21cde2e434). Додано src/download_yields.py (11 URL, пропуск наявних, перевірка %PDF-), pypdf==7.1.1 у requirements.txt, оновлено докстрінги і docs/yields.md.",
+ "files": [
+  {"path": "src/download_yields.py", "purpose": "завантаження 11 PDF zb_rosl_10..20 у data/raw/statgov/, пропуск наявних, перевірка PDF", "committed": false},
+  {"path": "src/yield_tables.py", "purpose": "читає PDF через pypdf, сторінку знаходить за заголовком «2.6. Урожайність пшениці» і рядком років", "committed": false},
+  {"path": "src/yields.py", "purpose": "лише докстрінг: джерело PDF, ланцюжок відтворення", "committed": false},
+  {"path": "requirements.txt", "purpose": "pypdf==7.1.1", "committed": false},
+  {"path": "docs/yields.md", "purpose": "PDFKit замінено на pypdf, ланцюжок відтворення", "committed": false}
+ ],
+ "checks": [
+  {"criterion_id": "A1", "passed": true, "evidence": "data/raw/statgov/text/ прибрано (перенесено поза репозиторій), код не містить посилань на .txt/PDFKit. .venv/bin/python -m src.yield_tables і -m src.yields відпрацювали; «Розбіжності між випусками: немає»; 19 років, усі 11 випусків розібрано методом label."},
+  {"criterion_id": "A2", "passed": true, "evidence": "md5 data/processed/yields.csv після запуску = 4a8440825ea9ac342d345d21cde2e434 (як до змін); середня -16.513295490083348 (n=7), без 2022-2025 -15.207197772315519 (n=6)."},
+  {"criterion_id": "A3", "passed": true, "evidence": "Запуск src.download_yields: усі 11 URL (2010..2020) виведено зі статусом skipped, мережі не використано. requirements.txt: pypdf==7.1.1."}
+ ],
+ "facts": [
+  {"claim": "pypdf 7.1.1 дає для всіх 11 випусків рядок «Миколаївська ...» з підписом; значення збігаються з розбором через PDFKit (yields.csv без змін)", "source": "запуск src.yield_tables і md5 yields.csv", "verified": true}
+ ],
+ "issues": [
+  "Обрано pypdf, pdfplumber не потрібен. З pypdf усі 11 випусків розбираються за підписом (label), позиційний метод position у випусках 2010-2013 і 2018 більше не спрацьовує, але лишений як запасний.",
+  "Заголовок табл. 2.6 у змісті теж є; сторінку даних відрізняє наявність рядка років. У випуску 2019 до назви приклеєна цифра виноски («пшениці1»), враховано в TITLE_RE.",
+  "Мережеве завантаження не перевірялося (за умовою); перевірено лише гілку skipped."
+ ],
+ "handoff": [
+  "Ланцюжок відтворення: .venv/bin/python -m src.download_yields -> -m src.yield_tables -> -m src.yields.",
+  "data/raw/statgov/text/ більше не потрібна; тексти випусків 2021 і 2022 як і раніше введено вручну (MANUAL_ROWS у src/yields.py).",
+  "Нова залежність: pypdf==7.1.1."
+ ],
+ "commands_run": [
+  ".venv/bin/pip install pypdf",
+  ".venv/bin/python -m src.download_yields",
+  ".venv/bin/python -m src.yield_tables",
+  ".venv/bin/python -m src.yields",
+  "md5 data/processed/yields.csv",
+  "python3 orchestration/validate.py T27"
+ ]
+}

@@ -9,3 +9,4 @@ regionmask==0.13.0
 matplotlib==3.11.2
 requests==2.34.2
 jsonschema==4.26.0
+pypdf==7.1.1

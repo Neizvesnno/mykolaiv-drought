@@ -7,15 +7,22 @@
   рік -> значення -> випуск(и), де той самий рік у різних випусках перевіряється
   на збіг.
 
-Звідки дані: data/raw/statgov/text/zb_rosl_<YY>.txt. Це текст PDF
-  data/raw/statgov/zb_rosl_<YY>.pdf, витягнутий PDFKit (macOS) і скопійований
-  сюди, щоб розбір відтворювався без тимчасових папок. Текст недовірений: ми його
-  лише читаємо як дані, регулярними виразами, нічого не виконуємо.
+Звідки дані: PDF data/raw/statgov/zb_rosl_<YY>.pdf (11 випусків). Текст сторінок
+  читає бібліотека pypdf напряму з PDF: жодних проміжних .txt і macOS-інструментів
+  (раніше текст витягав PDFKit). Чому pypdf, а не pdfplumber: pypdf (чистий Python,
+  одна залежність) віддає для всіх 11 випусків рядки таблиці, що розбираються
+  тими самими правилами, і результат збігається з попереднім розбором байт у байт
+  (yields.csv не змінився), тож важчий pdfplumber не потрібен. PDF недовірений:
+  ми лише читаємо текст і розбираємо його регулярними виразами, нічого не виконуємо.
 
-Як знайти рядок Миколаївської (формат PDF різний):
-  - випуски 2014-2017, 2019, 2020: у рядку є підпис «Миколаївська 39,5 16,4 ...»;
-  - випуски 2010-2013 і 2018: підписів областей у тексті немає (вони злиплі в один
-    рядок), лишилися лише рядки чисел. Тоді беремо рядки, що складаються суто з
+Сторінку з табл. 2.6 шукаємо за заголовком «2.6. Урожайність пшениці» разом із
+  рядком років колонок (зміст містить той самий заголовок, але без рядка років),
+  а не за номером сторінки: він різний у різних випусках.
+
+Як знайти рядок Миколаївської (у pypdf-тексті всіх 11 випусків підпис є, метод
+  «label»; запасний «position» лишено на випадок PDF без підписів):
+  - основний: у рядку є підпис «Миколаївська 39,5 16,4 ...»;
+  - запасний: якщо підписів областей у тексті немає, лишаються лише рядки чисел. Тоді беремо рядки, що складаються суто з
     чисел (рядки з «...» відкидаємо), і рахуємо з кінця: останній рядок = Чернігівська,
     Миколаївська = 13-та область із 24, тому це 12-й рядок з кінця. Рахуємо з кінця,
     бо на початку рядки України/Криму то є, то немає.
@@ -25,22 +32,26 @@
 Коли той самий рік у різних випусках розходиться, беремо найновіший випуск
   (Держстат уточнює дані).
 
-Запуск з кореня репозиторію: .venv/bin/python -m src.yield_tables
+Як відтворити весь ланцюжок (з кореня репозиторію, .venv з requirements.txt):
+  .venv/bin/python -m src.download_yields   # PDF -> data/raw/statgov/
+  .venv/bin/python -m src.yield_tables      # PDF -> таблиця рік -> значення (друк)
+  .venv/bin/python -m src.yields            # -> data/processed/yields.csv
 """
 
 import re
 import sys
 from pathlib import Path
 
+from pypdf import PdfReader
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src import config
 
-TEXT_DIR = config.RAW_DIR / "statgov" / "text"
+PDF_DIR = config.RAW_DIR / "statgov"
 ISSUES = tuple(range(2010, 2021))          # випуски 2010..2020 (11 збірників)
 REGION = "Миколаївська"
-TITLE_RE = re.compile(r"^2\.6\. *Урожайність пшениці", re.IGNORECASE)
-PAGE_RE = re.compile(r"^=====PAGE")
+TITLE_RE = re.compile(r"^2\.6\. *Урожайність пшениці\d?\s*$", re.IGNORECASE)
 YEARS_RE = re.compile(r"^(?:\d{4}\d? ){6,7}\d{4}\d?$")   # «1990 2000 ... 20181»
 NUM_RE = re.compile(r"^\d+,\d$")
 N_OBLASTS = 24
@@ -48,17 +59,20 @@ MYKOLAIV_NUMBER = 13                       # 13-та область за абе�
 ROWS_FROM_END = N_OBLASTS - MYKOLAIV_NUMBER + 1   # 12: Миколаївська = rows[-12]
 
 
-def _page_block(lines: list[str]) -> list[str]:
-    """Сторінка (між маркерами =====PAGE), де стоїть останній заголовок табл. 2.6.
+def _find_table_page(pdf_path: Path) -> list[str]:
+    """Рядки сторінки з табл. 2.6: є заголовок «2.6. Урожайність пшениці» і рядок років.
 
-    Останній, бо перший збіг — зміст. У випусках 2014-2017 заголовок стоїть унизу
-    сторінки з даними, в інших — угорі; в обох випадках таблиця в тому ж блоці.
+    У змісті заголовок теж є, але з крапками-відбивками і без рядка років, тому
+    його відсіюємо. Беремо останній збіг (дані стоять після змісту).
     """
-    title = max(i for i, s in enumerate(lines) if TITLE_RE.match(s.strip()))
-    start = max(i for i in range(title + 1) if PAGE_RE.match(lines[i])) if any(
-        PAGE_RE.match(s) for s in lines[:title + 1]) else 0
-    end = next((i for i in range(title + 1, len(lines)) if PAGE_RE.match(lines[i])), len(lines))
-    return lines[start:end]
+    found = []
+    for page in PdfReader(pdf_path).pages:
+        lines = [s.strip() for s in (page.extract_text() or "").splitlines()]
+        if any(TITLE_RE.match(s) for s in lines) and any(YEARS_RE.match(s) for s in lines):
+            found.append(lines)
+    if not found:
+        raise ValueError(f"{pdf_path.name}: сторінку табл. 2.6 не знайдено")
+    return found[-1]
 
 
 def _parse_years(line: str) -> tuple[list[int], list[bool]]:
@@ -70,8 +84,7 @@ def _parse_years(line: str) -> tuple[list[int], list[bool]]:
 def extract_issue(issue: int) -> dict:
     """{'years': [...], 'values': [...], 'footnote': [...], 'method': 'label'|'position'}."""
     yy = issue % 100
-    lines = (TEXT_DIR / f"zb_rosl_{yy}.txt").read_text(encoding="utf-8").splitlines()
-    block = _page_block(lines)
+    block = _find_table_page(PDF_DIR / f"zb_rosl_{yy}.pdf")
     year_line = next(s.strip() for s in block if YEARS_RE.match(s.strip()))
     years, foot = _parse_years(year_line)
 

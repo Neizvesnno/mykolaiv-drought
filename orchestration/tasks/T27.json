@@ -1,0 +1,43 @@
+{
+  "id": "T27",
+  "day": "2026-11-23",
+  "role": "analysis",
+  "title": "Відтворюваний витяг таблиць урожайності на Python (без macOS PDFKit)",
+  "depends_on": [
+    "T26"
+  ],
+  "inputs": [
+    "src/yield_tables.py",
+    "src/yields.py",
+    "src/config.py",
+    "requirements.txt",
+    "data/raw/statgov/",
+    "data/processed/yields.csv"
+  ],
+  "instructions": "Павло (23.11) погодився зробити крок «збірники Держстату → таблиця урожайності» відтворюваним на будь-якій ОС. Зараз src/yield_tables.py читає data/raw/statgov/text/zb_rosl_<YY>.txt, які Supervisor витяг через macOS PDFKit (Swift) — цього кроку немає в репозиторії, а data/raw у .gitignore. Зроби: (1) встанови pypdf у .venv (.venv/bin/pip install pypdf) і додай закріплену версію в requirements.txt; якщо pypdf дає текст, з якого рядок не розбирається, спробуй pdfplumber і поясни вибір у докстрінгу; (2) скрипт завантаження src/download_yields.py: 11 PDF «Рослинництво України» з https://stat.gov.ua/sites/default/files/2026-10/zb_rosl_<YY>.pdf для YY = 10..20 у data/raw/statgov/, пропускає вже наявні файли, перевіряє, що це PDF, константи вгорі (URL-шаблон, список випусків); сам скрипт для перевірки НЕ запускай з мережею — файли вже є локально, достатньо запуску, що все пропускає (у звіті — вивід); (3) у src/yield_tables.py читай текст сторінок прямо з PDF через pypdf (без .txt), шукай сторінку з табл. 2.6 «Урожайність пшениці» за заголовком (не за номером сторінки), а рядок Миколаївської — за підписом, якщо він є, інакше позиційно, як зараз; перевірка перехресних років лишається; (4) data/raw/statgov/text/ і копії .txt більше не потрібні — прибери залежність від них з коду (самі файли в data/raw можна видалити, вони не в git); (5) перезапусти .venv/bin/python -m src.yield_tables і .venv/bin/python -m src.yields. Головний критерій: data/processed/yields.csv має лишитися байт у байт тим самим (md5 зараз 4a8440825ea9ac342d345d21cde2e434), окрім хіба що колонки accessed чи подібних службових — якщо щось змінилось, зупинись і поясни в issues, не підганяй. Запиши в докстрінгах обох скриптів, як відтворити: download_yields → yield_tables → yields. Не чіпай slides_draft.py, docs/ (крім docs/yields.md, якщо там згадано PDFKit — заміни на pypdf), prompts.md, state.json; нічого іншого не завантажуй.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "yield_tables.py працює з PDF через pypdf (або pdfplumber), без файлів .txt і без macOS-інструментів",
+      "how": "Supervisor тимчасово перейменовує data/raw/statgov/text (якщо лишилась) і запускає ланцюжок"
+    },
+    {
+      "id": "A2",
+      "check": "yields.csv не змінився (md5 4a8440825ea9ac342d345d21cde2e434)",
+      "how": "md5 після запуску"
+    },
+    {
+      "id": "A3",
+      "check": "download_yields.py пропускає наявні файли і має всі 11 URL; requirements.txt містить закріплену версію pypdf",
+      "how": "запуск без мережі; перегляд коду"
+    }
+  ],
+  "outputs": [
+    "src/download_yields.py",
+    "src/yield_tables.py",
+    "requirements.txt",
+    "docs/yields.md"
+  ],
+  "fallback": "Якщо жодна Python-бібліотека не дає розбірного тексту для якогось випуску — лиши цей випуск з поясненням у issues і не вгадуй числа.",
+  "max_attempts": 2
+}
