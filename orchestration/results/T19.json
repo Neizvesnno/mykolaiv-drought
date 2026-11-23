@@ -1,0 +1,38 @@
+{
+ "task_id": "T19",
+ "status": "done",
+ "summary": "Прибрано округлення в src/season.py і src/drought_years.py (CSV і summary.json тепер із повною точністю), скрипти перезапущено, категорії не змінились (21/17/4; 5 з 33 і 16 з 35 за PDSI; 4 з 33 і 13 з 35 підтверджених; за опадами 2 з 33 і 6 з 35). fig2 і fig3 перегенеровано (PDSI 2 знаки, відсотки 1 знак, кома), fig1 перезапущено без змін вигляду. docs/sanity_check.md оновлено за правилом точності.",
+ "files": [
+  {"path": "src/season.py", "purpose": "прибрано table.round(4) перед CSV", "committed": false},
+  {"path": "src/drought_years.py", "purpose": "прибрано всі round() у CSV і summary.json; додано fmt_one_in() для тексту for_farmers (2 знаки, кома)", "committed": false},
+  {"path": "src/fig_maps.py", "purpose": "заголовки панелей з 2 знаками PDSI (−6,34)", "committed": false},
+  {"path": "src/fig_frequency.py", "purpose": "відсотки районів з 1 знаком, «1 рік із N» з 2 знаками, з точних значень summary.json; додано fmt()", "committed": false},
+  {"path": "docs/sanity_check.md", "purpose": "числа за правилом точності, біля порогу 3 знаки", "committed": false}
+ ],
+ "checks": [
+  {"criterion_id": "A1", "passed": true, "evidence": "season_oblast.csv: 1958,-0.4397061705667366,321.5578416094477,...; drought_years.csv: 1959 pdsi -3.069146726982197, ppt_anom_pct -25.356771449423775; summary.json: mean_frequency_pct 35.17717930545712, share_pdsi_pct 15.151515151515152, one_year_in_pdsi 6.6, worst_years pdsi float без round."},
+  {"criterion_id": "A2", "passed": true, "evidence": "Порівняння старого і нового summary.json: різниця лише в числових полях (share_*_pct, frequency_cells_min_max_pct, текст text_pdsi). categories, periods (списки років і кількості), cross_check лічильники, confirmed_by, sensitivity не змінились. У drought_years.csv колонки drought_pdsi, ppt_negative, ppt_dry, soil_dry, confirmed_by_ppt, drought_le_-1.5, drought_le_-3.0 збігаються з попередніми (0 розбіжностей); category теж 21/17/4."},
+  {"criterion_id": "A3", "passed": true, "evidence": "Переглянуто PNG: fig2 заголовки −6,34, −5,92, −5,73, −4,20; fig3 райони 35,2/33,4/30,7/29,1 % і ≈1 рік із 2,84/2,99/3,25/3,43, підпис під картою 35,2 % і 33,4 % проти 30,7 % і 29,1 %. fig1 перегенерований, нічого не зламалось."},
+  {"criterion_id": "A4", "passed": true, "evidence": "Звірено з drought_years.csv і summary.json: 2015 -2,031, 2013 -1,993, 1995 -1,954, 1989 -2,066, 2025 -6,34, 2007 -5,92, 2020 -5,73, 2024 -4,20, середні аномалії -13,84 і -29,76, райони 35,2/33,4/30,7/29,1, 1 рік із 3,24 і 4,00. Старі помилки: 2015 було -2,0, 2016 -1,8 (тепер -1,82), 2003 -1,4 (тепер -1,36)."}
+ ],
+ "facts": [
+  {"claim": "Округлення до 4 знаків у CSV не змінило жодної категорії; найближчий до порогу рік 2013 має PDSI -1,993", "source": "data/processed/drought_years.csv", "verified": true}
+ ],
+ "issues": [
+  "На fig3 підпис «≈1 рік із N» тепер із 2 знаками (2,84 тощо) за правилом; лінії-орієнтири на шкалі «1 рік із 2/3/4» лишились цілими, бо це довідкові поділки шкали.",
+  "fig1 містить поріг «-2» в підписі і осі: це поріг, не округлення, не змінювався."
+ ],
+ "handoff": [
+  "summary.json: ключі без змін, але значення тепер повні (share_*_pct, one_year_in_*, mean_frequency_pct, worst_years[].pdsi, cross_check mean_*). Слайди й тексти мають форматувати самі: PDSI 2 знаки, відсотки 1 знак, «1 із N» 2 знаки, з комою.",
+  "for_farmers.text_pdsi / text_confirmed: «1 рік із 3,24» і «1 рік із 4,00».",
+  "Періоди: 1 із 6,60 і 2,19 (за PDSI), 8,25 і 2,69 (підтверджені); частки 15,2 % і 45,7 %, 12,1 % і 37,1 %."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.season",
+  ".venv/bin/python -m src.drought_years",
+  ".venv/bin/python -m src.fig_maps",
+  ".venv/bin/python -m src.fig_frequency",
+  ".venv/bin/python -m src.fig_timeline",
+  "python3 orchestration/validate.py T19"
+ ]
+}

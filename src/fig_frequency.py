@@ -60,6 +60,11 @@ def land_polygon(ds):
     return unary_union(sq).buffer(1e-6).buffer(-1e-6)
 
 
+def fmt(x, digits):
+    """Число з комою як десятковим роздільником: 35.177 -> «35,2»."""
+    return f"{x:.{digits}f}".replace(".", ",")
+
+
 def make_frequency_map():
     plt.rcParams.update({
         "font.family": "DejaVu Sans",
@@ -89,12 +94,12 @@ def make_frequency_map():
     halo = [pe.withStroke(linewidth=4, foreground="white")]
     for _, row in rayons.iterrows():
         st = rayon_stats[row["name"]]
-        pct = round(st["mean_frequency_pct"])
-        n = round(100 / pct)
+        pct = st["mean_frequency_pct"]  # точне значення; округлюємо лише при показі
+        n = 100 / pct
         short = row["name"].replace(" район", "")
         p = row.geometry.representative_point()
         dx, dy = LABEL_SHIFT.get(row["name"], (0, 0))
-        ax.text(p.x + dx, p.y + dy, f"{short}\n{pct} % років\n≈1 рік із {n}",
+        ax.text(p.x + dx, p.y + dy, f"{short}\n{fmt(pct, 1)} % років\n≈1 рік із {fmt(n, 2)}",
                 ha="center", va="center", fontsize=FONT_RAYON,
                 fontweight="bold", color="black", path_effects=halo)
 
@@ -117,7 +122,7 @@ def make_frequency_map():
     fig.suptitle("Посуха — проблема всієї області", fontsize=FONT_TITLE,
                  fontweight="bold", y=0.96)
     def pct_of(name):
-        return round(rayon_stats[f"{name} район"]["mean_frequency_pct"])
+        return fmt(rayon_stats[f"{name} район"]["mean_frequency_pct"], 1)
     n1, n2 = (pct_of(x) for x in NORTH)
     s1, s2 = (pct_of(x) for x in SOUTH)
     fig.text(0.36, 0.13,

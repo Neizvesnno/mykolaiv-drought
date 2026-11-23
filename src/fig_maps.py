@@ -60,8 +60,8 @@ plt.rcParams.update({
 
 
 def fmt(x):
-    """Число з комою і справжнім мінусом: -6.34 -> «−6,3»."""
-    return f"{x:.1f}".replace("-", "−").replace(".", ",")
+    """Число з комою і справжнім мінусом: -6.3412 -> «−6,34»."""
+    return f"{x:.2f}".replace("-", "−").replace(".", ",")
 
 
 def land_polygon(lon, lat, mask):

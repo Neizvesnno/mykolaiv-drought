@@ -129,7 +129,7 @@ def main():
         "soil_anom_pct": weighted_mean(soil_anom, land, w).values,
         COL_SHARE: weighted_mean(drought, land, w).values,
     })
-    table.round(4).to_csv(OUT_CSV, index=False)
+    table.to_csv(OUT_CSV, index=False)
     print(table.tail(3).round(3).to_string(index=False))
 
     # --- Контроль без regionmask: точка-в-полігоні через shapely ---

@@ -11,8 +11,8 @@
     "drought_years_pdsi": 21,
     "drought_years_confirmed": 17,
     "inertial_years": 4,
-    "text_pdsi": "21 з 68 сезонів: 1 рік із 3.2 (за PDSI)",
-    "text_confirmed": "17 з 68 сезонів: 1 рік із 4.0 (підтверджені)"
+    "text_pdsi": "21 з 68 сезонів: 1 рік із 3,24 (за PDSI)",
+    "text_confirmed": "17 з 68 сезонів: 1 рік із 4,00 (підтверджені)"
   },
   "categories": {
     "підтверджена": [
@@ -126,11 +126,11 @@
       "years": "1958-1990",
       "n_years": 33,
       "drought_years_pdsi": 5,
-      "share_pdsi_pct": 15,
+      "share_pdsi_pct": 15.151515151515152,
       "one_year_in_pdsi": 6.6,
       "drought_years_confirmed": 4,
-      "share_confirmed_pct": 12,
-      "one_year_in_confirmed": 8.2,
+      "share_confirmed_pct": 12.121212121212121,
+      "one_year_in_confirmed": 8.25,
       "years_list_pdsi": [
         1959,
         1975,
@@ -151,11 +151,11 @@
       "years": "1991-2025",
       "n_years": 35,
       "drought_years_pdsi": 16,
-      "share_pdsi_pct": 46,
-      "one_year_in_pdsi": 2.2,
+      "share_pdsi_pct": 45.714285714285715,
+      "one_year_in_pdsi": 2.1875,
       "drought_years_confirmed": 13,
-      "share_confirmed_pct": 37,
-      "one_year_in_confirmed": 2.7,
+      "share_confirmed_pct": 37.142857142857146,
+      "one_year_in_confirmed": 2.6923076923076925,
       "years_list_pdsi": [
         1992,
         1994,
@@ -190,7 +190,7 @@
         2025
       ],
       "drought_years_confirmed_by_ppt": 6,
-      "one_year_in_confirmed_by_ppt": 5.8
+      "one_year_in_confirmed_by_ppt": 5.833333333333333
     }
   },
   "cross_check": {
@@ -199,8 +199,8 @@
     "soil_anom_negative": 20,
     "soil_dry_le_minus20": 15,
     "both_ppt_and_soil_negative": 17,
-    "mean_ppt_anom_pct": -13.8,
-    "mean_soil_anom_pct": -29.8,
+    "mean_ppt_anom_pct": -13.839170086037287,
+    "mean_soil_anom_pct": -29.763970122180343,
     "ppt_above_norm_years": [
       1989,
       1990,
@@ -286,23 +286,23 @@
   "worst_years": [
     {
       "year": 2025,
-      "pdsi": -6.34
+      "pdsi": -6.341090405652066
     },
     {
       "year": 2007,
-      "pdsi": -5.92
+      "pdsi": -5.917648916792297
     },
     {
       "year": 2020,
-      "pdsi": -5.73
+      "pdsi": -5.732898337610109
     },
     {
       "year": 2024,
-      "pdsi": -4.2
+      "pdsi": -4.202061707031057
     },
     {
       "year": 2009,
-      "pdsi": -4.11
+      "pdsi": -4.108845045154723
     }
   ],
   "area_share_note": {
@@ -313,34 +313,34 @@
     "rayons": {
       "Баштанський район": {
         "n_cells": 721,
-        "mean_frequency_pct": 29.1,
-        "mean_pdsi_dry_years": -3.47
+        "mean_frequency_pct": 29.146610100350824,
+        "mean_pdsi_dry_years": -3.472301959991455
       },
       "Вознесенський район": {
         "n_cells": 668,
-        "mean_frequency_pct": 33.4,
-        "mean_pdsi_dry_years": -3.56
+        "mean_frequency_pct": 33.396442409299055,
+        "mean_pdsi_dry_years": -3.5606436729431152
       },
       "Миколаївський район": {
         "n_cells": 847,
-        "mean_frequency_pct": 30.7,
-        "mean_pdsi_dry_years": -3.46
+        "mean_frequency_pct": 30.74519063823876,
+        "mean_pdsi_dry_years": -3.4574882984161377
       },
       "Первомайський район": {
         "n_cells": 415,
-        "mean_frequency_pct": 35.2,
-        "mean_pdsi_dry_years": -3.53
+        "mean_frequency_pct": 35.17717930545712,
+        "mean_pdsi_dry_years": -3.5281286239624023
       }
     },
-    "median_lat": 47.45,
-    "north_mean_frequency_pct": 32.8,
-    "south_mean_frequency_pct": 30.5,
-    "north_mean_pdsi_dry_years": -3.52,
-    "south_mean_pdsi_dry_years": -3.48,
-    "corr_frequency_vs_lat": 0.43,
+    "median_lat": 47.449861111000004,
+    "north_mean_frequency_pct": 32.78127832204048,
+    "south_mean_frequency_pct": 30.498721227621488,
+    "north_mean_pdsi_dry_years": -3.517334222793579,
+    "south_mean_pdsi_dry_years": -3.478710412979126,
+    "corr_frequency_vs_lat": 0.4328067698763827,
     "frequency_cells_min_max_pct": [
-      26.5,
-      36.8
+      26.47058823529412,
+      36.76470588235294
     ]
   }
 }

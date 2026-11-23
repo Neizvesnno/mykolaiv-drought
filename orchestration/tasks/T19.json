@@ -1,0 +1,55 @@
+{
+  "id": "T19",
+  "day": "2026-11-23",
+  "role": "analysis",
+  "title": "Точність: прибрати округлення з аналізу і документів",
+  "depends_on": [
+    "T06",
+    "T08",
+    "T09",
+    "T10"
+  ],
+  "inputs": [
+    "src/season.py",
+    "src/drought_years.py",
+    "src/fig_maps.py",
+    "src/fig_frequency.py",
+    "docs/sanity_check.md"
+  ],
+  "instructions": "Павло вимагає менше округлення. Застосуй правило «Точність чисел» з WORKER.md (shared.precision): 1) src/season.py і src/drought_years.py — прибрати всі round()/.round() перед збереженням CSV і summary.json (друк у консоль може лишитись округленим); перезапустити обидва скрипти. 2) Переконатися, що категорії, кількості років і списки років не змінились (порівняй зі старими значеннями з git: 21/17/4, 4 з 33, 13 з 35, за опадами 2 з 33 і 6 з 35). 3) Рисунки: у src/fig_maps.py заголовки панелей з 2 знаками PDSI, у src/fig_frequency.py підписи районів і підпис під картою з 1 знаком відсотка; перегенерувати fig2 і fig3, переглянути очима. src/fig_timeline.py не змінювати, якщо там немає округлених чисел. 4) docs/sanity_check.md — оновити числа за правилом (PDSI 2 знаки, біля порогу 3, відсотки 1 знак), смисл тексту не міняти.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "У data/processed/season_oblast.csv, drought_years.csv і summary.json немає штучного округлення (значення мають більше 4 знаків після коми)",
+      "how": "head CSV і grep summary.json, вивести приклади в evidence"
+    },
+    {
+      "id": "A2",
+      "check": "Категорії, кількості та списки років такі самі, як до зміни",
+      "how": "git diff summary.json по полях categories, periods, confirmed_by"
+    },
+    {
+      "id": "A3",
+      "check": "Рисунки fig2 і fig3 перегенеровано, числа на них з точністю за правилом",
+      "how": "переглянути PNG"
+    },
+    {
+      "id": "A4",
+      "check": "Числа в docs/sanity_check.md відповідають правилу точності і даним",
+      "how": "звірити 5+ чисел з summary.json і drought_years.csv"
+    }
+  ],
+  "outputs": [
+    "src/season.py",
+    "src/drought_years.py",
+    "data/processed/season_oblast.csv",
+    "data/processed/drought_years.csv",
+    "data/processed/summary.json",
+    "src/fig_maps.py",
+    "src/fig_frequency.py",
+    "figures/fig2_maps.png",
+    "figures/fig3_frequency.png",
+    "docs/sanity_check.md"
+  ],
+  "max_attempts": 2
+}

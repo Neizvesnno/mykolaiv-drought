@@ -15,7 +15,7 @@ STATE = ROOT / "state.json"
 
 PROMPT = """Ти воркер з роллю `{role}` у проєкті mykolaiv-drought. Задача {id}: {title}.
 
-1. Прочитай `orchestration/WORKER.md` і дотримуйся його.
+1. Прочитай `orchestration/WORKER.md` і дотримуйся його, зокрема правила «Точність чисел».
 2. Прочитай свою задачу `orchestration/tasks/{id}.json`.
 3. Прочитай звіти залежностей: {deps}.
 

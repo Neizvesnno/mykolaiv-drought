@@ -76,8 +76,13 @@ def categorize(row):
 
 
 def one_in_n(k, n):
-    """'1 рік із N' (N округлено до 0,1); None, якщо k = 0."""
-    return round(n / k, 1) if k else None
+    """'1 рік із N' (N не округлюємо; округлення лише при показі); None, якщо k = 0."""
+    return n / k if k else None
+
+
+def fmt_one_in(x):
+    """Показ «1 рік із N»: 2 знаки, кома (правило точності; у файлах число повне)."""
+    return f"{x:.2f}".replace(".", ",")
 
 
 def period_stats(table, y0, y1):
@@ -87,10 +92,10 @@ def period_stats(table, y0, y1):
     k_conf = int((sub.category == CAT_CONFIRMED).sum())
     return {
         "years": f"{y0}-{y1}", "n_years": n,
-        "drought_years_pdsi": k_pdsi, "share_pdsi_pct": round(100 * k_pdsi / n),
+        "drought_years_pdsi": k_pdsi, "share_pdsi_pct": 100 * k_pdsi / n,
         "one_year_in_pdsi": one_in_n(k_pdsi, n),
         "drought_years_confirmed": k_conf,
-        "share_confirmed_pct": round(100 * k_conf / n),
+        "share_confirmed_pct": 100 * k_conf / n,
         "one_year_in_confirmed": one_in_n(k_conf, n),
         "years_list_pdsi": [int(y) for y in sub[sub.drought_pdsi].year],
         "years_list_confirmed": [int(y) for y in sub[sub.category == CAT_CONFIRMED].year],
@@ -132,7 +137,7 @@ def main():
     t["confirmed_by_ppt"] = t.confirmed_by.isin(["опади", "обидва"])
     for s in SENSITIVITY_THRESHOLDS:
         t[f"drought_le_{s}"] = t.pdsi <= s
-    t.round(4).to_csv(OUT_CSV, index=False)
+    t.to_csv(OUT_CSV, index=False)
 
     # --- 3. Клітинки ---
     cells = xr.open_dataset(config.PROCESSED_DIR / "season_cells.nc")
@@ -158,19 +163,19 @@ def main():
         m = (idx == i) & land
         rayons[name] = {
             "n_cells": int(m.sum()),
-            "mean_frequency_pct": round(float(freq.where(m).mean()) * 100, 1),
-            "mean_pdsi_dry_years": round(float(mean_dry.where(m).mean()), 2),
+            "mean_frequency_pct": float(freq.where(m).mean()) * 100,
+            "mean_pdsi_dry_years": float(mean_dry.where(m).mean()),
         }
     # Північ/південь: клітинки вище/нижче медіани широти суші.
     lat2d = cells["lat"].broadcast_like(freq)
     med = float(lat2d.where(land).median())
     north, south = land & (lat2d >= med), land & (lat2d < med)
     ns = {
-        "median_lat": round(med, 2),
-        "north_mean_frequency_pct": round(float(freq.where(north).mean()) * 100, 1),
-        "south_mean_frequency_pct": round(float(freq.where(south).mean()) * 100, 1),
-        "north_mean_pdsi_dry_years": round(float(mean_dry.where(north).mean()), 2),
-        "south_mean_pdsi_dry_years": round(float(mean_dry.where(south).mean()), 2),
+        "median_lat": med,
+        "north_mean_frequency_pct": float(freq.where(north).mean()) * 100,
+        "south_mean_frequency_pct": float(freq.where(south).mean()) * 100,
+        "north_mean_pdsi_dry_years": float(mean_dry.where(north).mean()),
+        "south_mean_pdsi_dry_years": float(mean_dry.where(south).mean()),
     }
     # Кореляція частоти з широтою по клітинках (знак > 0: на півночі частіше).
     ok = land.values & np.isfinite(freq.values)
@@ -224,8 +229,8 @@ def main():
         "soil_anom_negative": int((d.soil_anom_pct < 0).sum()),
         "soil_dry_le_minus20": int(d.soil_dry.sum()),
         "both_ppt_and_soil_negative": int((d.ppt_negative & (d.soil_anom_pct < 0)).sum()),
-        "mean_ppt_anom_pct": round(float(d.ppt_anom_pct.mean()), 1),
-        "mean_soil_anom_pct": round(float(d.soil_anom_pct.mean()), 1),
+        "mean_ppt_anom_pct": float(d.ppt_anom_pct.mean()),
+        "mean_soil_anom_pct": float(d.soil_anom_pct.mean()),
         "ppt_above_norm_years": [int(y) for y in d[~d.ppt_negative].year],
     }
 
@@ -243,8 +248,8 @@ def main():
             "drought_years_pdsi": n_pdsi,
             "drought_years_confirmed": n_conf,
             "inertial_years": len(cat_lists[CAT_INERTIAL]),
-            "text_pdsi": f"{n_pdsi} з {n_all} сезонів: 1 рік із {one_in_n(n_pdsi, n_all)} (за PDSI)",
-            "text_confirmed": f"{n_conf} з {n_all} сезонів: 1 рік із {one_in_n(n_conf, n_all)} (підтверджені)",
+            "text_pdsi": f"{n_pdsi} з {n_all} сезонів: 1 рік із {fmt_one_in(one_in_n(n_pdsi, n_all))} (за PDSI)",
+            "text_confirmed": f"{n_conf} з {n_all} сезонів: 1 рік із {fmt_one_in(one_in_n(n_conf, n_all))} (підтверджені)",
         },
         "categories": cat_lists,
         "confirmed_by": {
@@ -256,7 +261,7 @@ def main():
         "periods": periods,
         "cross_check": cross,
         "sensitivity": sens,
-        "worst_years": [{"year": int(r.year), "pdsi": round(r.pdsi, 2)}
+        "worst_years": [{"year": int(r.year), "pdsi": float(r.pdsi)}
                         for r in t.nsmallest(5, "pdsi").itertuples()],
         "area_share_note": {
             "years_with_share_ge_0.95": int((t["area_share_pdsi_le_-2"] >= 0.95).sum()),
@@ -264,9 +269,9 @@ def main():
         },
         "spatial": {
             "rayons": rayons, **ns,
-            "corr_frequency_vs_lat": round(corr_lat, 2),
-            "frequency_cells_min_max_pct": [round(float(freq.min()) * 100, 1),
-                                            round(float(freq.max()) * 100, 1)],
+            "corr_frequency_vs_lat": float(corr_lat),
+            "frequency_cells_min_max_pct": [float(freq.min()) * 100,
+                                            float(freq.max()) * 100],
         },
     }
     OUT_JSON.write_text(json.dumps(summary, ensure_ascii=False, indent=2))

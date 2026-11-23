@@ -17,6 +17,11 @@
       "id": "A1",
       "check": "Результат відтворюється з нуля",
       "how": "diff summary.json"
+    },
+    {
+      "id": "A2",
+      "check": "Числа в усіх docs і на слайдах відповідають правилу shared.precision і даним",
+      "how": "вибірково звірити 10 чисел з summary.json"
     }
   ],
   "outputs": [

@@ -5,7 +5,8 @@
   "title": "Врожайність пшениці по області (Держстат)",
   "optional": true,
   "depends_on": [
-    "T06"
+    "T06",
+    "T19"
   ],
   "inputs": [
     "data/processed/drought_years.csv"
