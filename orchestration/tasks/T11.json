@@ -20,6 +20,7 @@
     }
   ],
   "outputs": [
+    "src/yields.py",
     "data/processed/yields.csv",
     "docs/yields.md"
   ],
