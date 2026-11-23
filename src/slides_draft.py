@@ -70,7 +70,11 @@ def yield_fact(year):
 
 
 # роки, для яких у yields.csv є втрата (підтверджена посуха з базою)
-YIELD_FACT_YEARS = [int(y) for y in Y.index[Y["loss_pct"].notna()]]
+YIELD_LOSS_YEARS = [int(y) for y in Y.index[Y["loss_pct"].notna()]]
+# на слайді лише останні N_YIELD_SHOWN років (місця мало); решта — у docs/yields.md
+N_YIELD_SHOWN = 4
+YIELD_FACT_YEARS = YIELD_LOSS_YEARS[-N_YIELD_SHOWN:]
+YIELD_REST = YIELD_LOSS_YEARS[:-N_YIELD_SHOWN]
 
 # --- чорнові тексти: по одному словнику на слайд ---
 SLIDES = [
@@ -115,6 +119,7 @@ SLIDES = [
                 f"Підтверджена посуха: 1 рік із {one_in}",
                 "Пшениця (проти несухих років):",
                 *[yield_fact(y) for y in YIELD_FACT_YEARS],
+                *([f"Ще {len(YIELD_REST)} р. — у методології"] if YIELD_REST else []),
             ]),
             ("Що з цим робити", [
                 "Враховувати частоту посух у планах",
@@ -166,7 +171,9 @@ def build_slide(pdf, i, d):
         for c, (head, items) in enumerate(d["columns"]):
             x = 0.04 + c * 0.50
             put_text(fig, x, 0.76, head, BODY_PT + 4, weight="bold", va="top")
-            put_bullets(fig, x, 0.66, items, step=0.11)
+            # крок стискаємо, коли пунктів багато, щоб останній не налазив на рядок джерела
+            step = min(0.11, 0.54 / max(len(it) for _, it in d["columns"]))
+            put_bullets(fig, x, 0.66, items, step=step)
     elif i == 0:  # широкий рисунок зверху, текст під ним
         put_image(fig, (0.04, 0.30, 0.92, 0.58), d["figure"])
         put_bullets(fig, 0.04, 0.26, d["bullets"], step=0.065)
