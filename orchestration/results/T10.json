@@ -1,0 +1,28 @@
+{
+ "task_id": "T10",
+ "status": "done",
+ "summary": "Карта частоти посух figures/fig3_frequency.png (одна панель, 10x9 in, 300 dpi) за src/fig_frequency.py. Дискретна шкала YlOrBr 0-50 % кроком 5 % (BoundaryNorm), підписи 1 рік із 2/3/4 біля шкали, на карті 4 райони з частотами 35/33/31/29 % з summary.json. Контур суходолу - union квадратів land_mask, межі районів обрізані ним.",
+ "files": [
+  {"path": "src/fig_frequency.py", "purpose": "make_frequency_map(): карта частоти посух; запуск .venv/bin/python -m src.fig_frequency", "committed": false},
+  {"path": "figures/fig3_frequency.png", "purpose": "Рисунок 3: частота посух по клітинках і районах", "committed": false}
+ ],
+ "checks": [
+  {"criterion_id": "A1", "passed": true, "evidence": "Переглянуто PNG: заголовок Посуха - проблема всієї області, легенда частка років із посухою, %, без PDSI; підписи 1 рік із 2 (50 %), із 3 (33 %), із 4 (25 %) на пропорційній шкалі."},
+  {"criterion_id": "A2", "passed": true, "evidence": "summary.json spatial.rayons mean_frequency_pct: Первомайський 35.2, Вознесенський 33.4, Миколаївський 30.7, Баштанський 29.1; на карті 35, 33, 31, 29 % (числа беруться з файлу в коді). Окремо sanity_check.md не звіряв."}
+ ],
+ "facts": [
+  {"claim": "Частоти по районах 35.2/33.4/30.7/29.1 %, діапазон клітинок 26.5-36.8 %", "source": "data/processed/summary.json spatial", "verified": true}
+ ],
+ "issues": [
+  "Підписи Первомайського і Вознесенського зсунуті вручну (LABEL_SHIFT) від representative_point, бо інакше перекривалися.",
+  "Для порівняння з sanity_check.md числа не звірені окремим кроком."
+ ],
+ "handoff": [
+  "Функція make_frequency_map() у src/fig_frequency.py; вихід figures/fig3_frequency.png.",
+  "Шкала дискретна 0-50 %, кольори майже однорідні (26-37 %) - це навмисно, для чесності."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.fig_frequency",
+  "python3 orchestration/validate.py T10"
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "task_id": "T08",
+ "status": "done",
+ "summary": "Намальовано figures/fig1_timeline.png (300 dpi, 13x6 in): 68 стовпчиків 1958–2025, PDSI сезону квітень–вересень. Підтверджених посух (червоні) 17, інерційних (помаранчеві зі штрихуванням) 4, роки збігаються з drought_years.csv. Лінія -2 з підписом, розділювач 1990/1991 з підписами періодів із summary.json («4 посухи за 33 роки», «13 посух за 35 років», відмінок через _plural()), підписані 2025, 2007, 2020. Візуально перевірено, текст не налазить.",
+ "files": [
+  {
+   "path": "src/fig_timeline.py",
+   "purpose": "make_timeline(): рисунок 1, запуск .venv/bin/python -m src.fig_timeline",
+   "committed": false
+  },
+  {
+   "path": "figures/fig1_timeline.png",
+   "purpose": "Графік по роках з підсвіченими посухами",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "Скрипт друкує з CSV: підтверджена 17 [1959,1975,1983,1990,1992,1994,2002,2007,2009,2012,2014,2018,2019,2020,2022,2024,2025]; інерційна 4 [1989,2008,2015,2023]; решта 47 сірі. Кольори беруться з колонки category, тож збігаються з drought_years.csv; PNG переглянуто."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "17 підтверджених, 4 інерційні; періоди 4/33 і 13/35; найгірші 2025, 2007, 2020",
+   "source": "data/processed/summary.json; data/processed/drought_years.csv",
+   "verified": true
+  }
+ ],
+ "issues": [
+  "Заголовок «втричі частіше»: частка 12% (4/33) проти 37% (13/35) дає ≈3,1 раза; Supervisor може перевірити формулювання."
+ ],
+ "handoff": [
+  "Стиль: DejaVu Sans, dpi 300, кольори Okabe-Ito (#D55E00, #E69F00 із штрихуванням ///, #8C8C8C); рядок джерела внизу ліворуч 12 pt сірим плюс другий рядок із поясненням PDSI.",
+  "results/T06.json застарів (19 підтверджених); використано summary.json.",
+  "Правки Supervisor'а внесено: функція _plural(n, one, few, many) відмінює посуха/рік; легенда інерційних: «сухо лише за індексом: опадів і вологи в ґрунті достатньо» (без PDSI)."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.fig_timeline",
+  "python3 orchestration/validate.py T08"
+ ]
+}

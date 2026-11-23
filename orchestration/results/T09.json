@@ -1,0 +1,55 @@
+{
+ "task_id": "T09",
+ "status": "done",
+ "summary": "Створено src/fig_maps.py (make_maps) і figures/fig2_maps.png (300 dpi, 11x10 in, 2x2). Роки з summary.json: 2025 (-6,3), 2007 (-5,9), 2020 (-5,7), 2024 (-4,2). Шкала BrBG TwoSlopeNorm(-7,0,4), спільна colorbar у два рядки з типографським мінусом. Межі районів білі (lw 1,5) на суходолі, зовнішній контур чорний; підписи міст впритул до точок; ax обрізано по суходолу. PNG переглянуто.",
+ "files": [
+  {
+   "path": "src/fig_maps.py",
+   "purpose": "Функція make_maps() і запуск через python -m src.fig_maps",
+   "committed": false
+  },
+  {
+   "path": "figures/fig2_maps.png",
+   "purpose": "Карти 4 найсухіших сезонів, 300 dpi",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "Перегляд PNG: одна шкала на всіх панелях, межі районів білі lw 1,5, добре видно на коричневому фоні; контур області чорний по суходолу."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "У коді norm = TwoSlopeNorm(vmin=-7, vcenter=0, vmax=4), cmap BrBG; поділки -7,-4,-2,0,2,4 на colorbar; у PNG 2020 видно сильнішу посуху на північному заході."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "Усі 4 райцентри лежать у своїх районах (Миколаїв-Миколаївський, Первомайськ-Первомайський, Вознесенськ-Вознесенський, Баштанка-Баштанський); координати Supervisor'а (31.99/46.97, 30.86/48.05, 31.33/47.57, 32.44/47.41) підтверджені, і кожна точка потрапляє лише в один район",
+   "source": "вивід python -m src.fig_maps, shapely contains() по data/boundaries/mykolaiv_rayons.geojson",
+   "verified": true
+  },
+  {
+   "claim": "Найсухіші сезони за середнім PDSI по області: 2025 -6,34; 2007 -5,92; 2020 -5,73; 2024 -4,20",
+   "source": "data/processed/summary.json worst_years",
+   "verified": true
+  }
+ ],
+ "issues": [
+  "Дрібна неузгодженість мінусів усунена: у підписі colorbar тепер «−2», «−4».",
+  "У 2007 і 2020 область майже одного темного тону: це правда даних, шкалу -7..+4 не змінено.",
+  "Баштанка підписана під точкою (по центру), бо праворуч і ліворуч підпис зливався з Вознесенськом або виходив за контур.",
+  "Для суходолу використано крихітне перекриття квадратів (EPS=1e-6 град), щоб прибрати шви в контурі."
+ ],
+ "handoff": [
+  "Запуск: .venv/bin/python -m src.fig_maps; функція make_maps() повертає шлях до PNG.",
+  "Стиль (DejaVu Sans, 22/16/14 pt, рядок джерела 12 pt сірий) задано в rcParams у src/fig_maps.py."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.fig_maps",
+  "python3 orchestration/validate.py T09"
+ ]
+}
