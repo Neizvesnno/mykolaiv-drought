@@ -413,8 +413,8 @@
         "T17",
         "T28"
       ],
-      "status": "pending",
-      "attempts": 0
+      "status": "done",
+      "attempts": 1
     }
   ],
   "log": [
@@ -720,6 +720,17 @@
       "task": "T28",
       "event": "done",
       "supervisor_check": "Перевірив сам у чистому клоні з GitHub (коміт 1ca6fa6, scratchpad/t17/clone): run_all від першого кроку без --skip — код 0, 17 кроків, 104,5 с; md5 summary.json 096ea6df…, yields.csv 4a844082… — як в оригіналі. check_data на зіпсованій копії soil (−2 місяці, −1000 мм) дав 2 FAIL, після відновлення OK. stat.gov.ua досі віддає 307 (обслуговування) — завантаження збірників з нуля перевірити пізніше."
+    },
+    {
+      "time": "2026-11-23T21:30",
+      "task": "T18",
+      "event": "start (спроба 1)"
+    },
+    {
+      "time": "2026-11-23T21:31",
+      "task": "T18",
+      "event": "done",
+      "supervisor_check": "Перевірив сам: 4 посилання дають 200 без логіну; private/submission_message.md ігнорується git; текст не обіцяє розділів 3 і 7. Надсилає Павло."
     }
   ]
 }

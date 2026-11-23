@@ -1,0 +1,28 @@
+{
+ "task_id": "T18",
+ "status": "done",
+ "summary": "Чернетка повідомлення Валерію для Djinni записана в private/submission_message.md: привітання, 3 прямі посилання на PDF (презентація з 4 слайдів, методологія, журнал роботи з AI), посилання на репозиторій, згадка про відтворення трьома командами. Усі 4 посилання без логіну дали HTTP 200, файл ігнорується git (.gitignore:8 private/). Розділи 3 і 7 prompts.md не згадані. Надсилає Павло.",
+ "files": [
+  {"path": "private/submission_message.md", "purpose": "чернетка повідомлення роботодавцю в Djinni", "committed": false}
+ ],
+ "checks": [
+  {"criterion_id": "A1", "passed": true, "evidence": "curl -sIL: 200 для https://github.com/Neizvesnno/mykolaiv-drought та blob/main/slides/presentation.pdf, blob/main/methodology.pdf, blob/main/prompts.pdf. git check-ignore -v private/submission_message.md -> .gitignore:8:private/; git status не показує private/."}
+ ],
+ "facts": [
+  {"claim": "Три команди відтворення: venv, pip install, python -m src.run_all", "source": "README.md, розділ «Як відтворити»", "verified": true},
+  {"claim": "Чотири посилання на GitHub відкриваються без логіну (HTTP 200)", "source": "curl -sIL 23.11.2026", "verified": true}
+ ],
+ "issues": [
+  "Ім'я Валерій взято з брифу Supervisor'а, у репозиторії не перевірялось; підпис «Павло» теж.",
+  "Посилання перевірено до того, як Павло допише розділи 3 і 7 prompts.md і запушить зміни; після push переконатись, що prompts.pdf на GitHub актуальний.",
+  "Перевірка стосується стану main на GitHub зараз; локальні невідправлені зміни в ній не враховано."
+ ],
+ "handoff": [
+  "Текст у private/submission_message.md, надсилає Павло сам у чат Djinni."
+ ],
+ "commands_run": [
+  "curl -sIL (4 URL)",
+  "git check-ignore -v private/submission_message.md",
+  "python3 orchestration/validate.py T18"
+ ]
+}
