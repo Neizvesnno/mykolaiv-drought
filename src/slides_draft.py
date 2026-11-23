@@ -82,7 +82,7 @@ SLIDES = [
             f"2007: {fmt(worst[2007], 2)}",
             f"2020: {fmt(worst[2020], 2)}",
             f"2024: {fmt(worst[2024], 2)}",
-            "Темніше — суховіше",
+            "Темніше — сухіше",
         ],
         "figure": "figures/fig2_maps.png",
         "note": SOURCE,
