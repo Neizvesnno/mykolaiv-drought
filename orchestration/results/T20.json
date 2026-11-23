@@ -1,0 +1,111 @@
+{
+ "task_id": "T20",
+ "status": "done",
+ "summary": "Завантажено tmax і pet (816 місяців кожна, NaN лише на воді). src/causes.py рахує сезонні ряди, періоди, групи за категоріями, тренди (пермутаційний тест, scipy немає) і частоту по районах. 1958-1990 проти 1991-2025: опади 296,5 -> 262,8 мм (-11,4 %), tmax 21,71 -> 23,62 °C (+1,92), pet 630,1 -> 710,5 мм (+12,8 %), баланс -114,1 мм (близько 30 % опади, 70 % випаровування). Тренд опадів -9,3 мм/10 р. значущий (p=0,022), tmax +0,56 °C/10 р. і pet +21,8 мм/10 р. p<=0,0001. Частота по районах підтверджена числа Supervisor'а; розкид між районами 6,0 -> 3,9 в.п., не зникає повністю.",
+ "files": [
+  {
+   "path": "src/config.py",
+   "purpose": "додано tmax і pet у VARIABLES",
+   "committed": false
+  },
+  {
+   "path": "src/download.py",
+   "purpose": "додано прапорець --vars для вибіркового завантаження",
+   "committed": false
+  },
+  {
+   "path": "src/causes.py",
+   "purpose": "сезонні ряди, періоди, групи, тренди, частота по районах, fig4",
+   "committed": false
+  },
+  {
+   "path": "data/raw/terraclimate_tmax.nc",
+   "purpose": "сирі дані tmax, 816 місяців",
+   "committed": false
+  },
+  {
+   "path": "data/raw/terraclimate_pet.nc",
+   "purpose": "сирі дані pet, 816 місяців",
+   "committed": false
+  },
+  {
+   "path": "data/processed/causes.csv",
+   "purpose": "68 років: ppt, tmax, pet, баланс, аномалії, category (повна точність)",
+   "committed": false
+  },
+  {
+   "path": "data/processed/causes.json",
+   "purpose": "періоди, групи, тренди, частота по районах",
+   "committed": false
+  },
+  {
+   "path": "docs/causes.md",
+   "purpose": "пояснення причин посухи з таблицями і обмеженнями",
+   "committed": false
+  },
+  {
+   "path": "docs/sanity_check.md",
+   "purpose": "дописано розділ про частоту по районах двома способами",
+   "committed": false
+  },
+  {
+   "path": "figures/fig4_causes.png",
+   "purpose": "дві панелі: опади і tmax по роках, середні періодів, підтверджені роки",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "tmax і pet: 816 місяців, унікальні, підряд 1958-01..2025-12; NaN 7,04 % лише поза сушею (0 на суходолі); tmax min -11,2 max 34,1 °C, липнева середня по області 23,3-32,8 °C; pet min 0,0 max 219,8 мм."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "causes.csv 68 рядків без NaN, causes.json: periods, drought_vs_not, trends, rayons_frequency, без округлення. Тренд tmax +0,5587 °C/10 р."
+  },
+  {
+   "criterion_id": "A3",
+   "passed": true,
+   "evidence": "docs/causes.md згенеровано з causes.json; відповідь: обидва чинники, випаровування сильніше; тренд опадів значущий (p=0,022), зазначено; застереження про залежність pet від температури."
+  },
+  {
+   "criterion_id": "A4",
+   "passed": true,
+   "evidence": "sanity_check.md: за індексом 29,1/33,4/30,7/35,2 %, підтверджена 22,7/25,4/26,6/26,0 % (Баштанський/Вознесенський/Миколаївський/Первомайський), з season_cells.nc."
+  },
+  {
+   "criterion_id": "A5",
+   "passed": true,
+   "evidence": "Переглянуто figures/fig4_causes.png (300 dpi, DejaVu Sans, Okabe-Ito, підпис джерела)."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "TerraClimate pet рахується за Penman-Monteith",
+   "source": "висновок з інструкції T20 (Supervisor), не перевірено за першоджерелом",
+   "verified": false
+  }
+ ],
+ "issues": [
+  "scipy немає: p-value пермутаційний (100000 перестановок, seed 20261123), мінімальне p=1e-5; автокореляція не враховується.",
+  "Тренд опадів значущий (p=0,022), тому формулювання «опадів не меншає» неправильне; відповідь: обидва чинники, спека/випаровування сильніше.",
+  "Група «немає» здебільшого з 1958-1990, тому її аномалія tmax відображає і тренд.",
+  "Різниця північ-південь за підтвердженою частотою зменшується (6,0 до 3,9 в.п.), але не зникає: Баштанський найменший; твердження Supervisor'а «зникає» трохи сильніше за дані.",
+  "У логах download.py є шумове повідомлення HDF5 про .nc.tmp, але pet.nc створено і перевірено.",
+  "На fig4 легенда лежить поверх нижньої частини стовпців опадів у лівому куті."
+ ],
+ "handoff": [
+  "causes.csv колонки: year, ppt_mm, tmax_c, pet_mm, balance_mm, ppt_anom_mm, ppt_anom_pct, pet_anom_mm, pet_anom_pct, tmax_anom_c, balance_anom_mm, category. Одиниці: мм за сезон, °C.",
+  "causes.json: periods (+difference), drought_vs_not (по категоріях), trends (slope_per_decade, p_value), rayons_frequency.",
+  "Для слайдів: tmax +1,92 °C, опади -11,4 %, pet +12,8 %; опади значущо зменшуються (p=0,022), не писати «опади не змінились».",
+  "Запуск: .venv/bin/python -m src.causes (з кореня)."
+ ],
+ "commands_run": [
+  ".venv/bin/python src/download.py --vars tmax pet",
+  ".venv/bin/python -m src.causes",
+  ".venv/bin/python -I (перевірка raw tmax/pet)",
+  "python3 orchestration/validate.py T20"
+ ]
+}

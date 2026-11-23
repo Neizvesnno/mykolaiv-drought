@@ -8,6 +8,7 @@ BBOX_DOWNLOAD, склеює роки і зберігає data/raw/terraclimate_<
 Як запустити (з кореня репозиторію):
     .venv/bin/python src/download.py            # пропускає вже наявні файли
     .venv/bin/python src/download.py --force    # перезавантажує все
+    .venv/bin/python src/download.py --vars tmax pet   # лише вказані змінні
 """
 
 import argparse
@@ -83,9 +84,11 @@ def summarize(var, path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--force", action="store_true", help="перезавантажити, навіть якщо файл є")
+    parser.add_argument("--vars", nargs="+", choices=list(config.VARIABLES),
+                        help="обробити лише ці змінні (за замовчуванням усі з config.VARIABLES)")
     args = parser.parse_args()
     config.RAW_DIR.mkdir(parents=True, exist_ok=True)
-    for var in config.VARIABLES:
+    for var in (args.vars or config.VARIABLES):
         out = config.RAW_DIR / f"terraclimate_{var}.nc"
         if out.exists() and not args.force:
             print(f"[{var}] {out.name} вже є, пропускаю (--force для перезавантаження)")
