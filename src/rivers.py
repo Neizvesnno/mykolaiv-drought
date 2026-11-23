@@ -15,6 +15,11 @@
     .venv/bin/python src/rivers.py
 Сира відповідь кешується в data/raw/overpass_mykolaiv_rivers.json; щоб
 оновити, видаліть файл. Повторний запуск використовує кеш і дає той самий результат.
+
+Другий запит (T23, дозволений окремо) шукає Бузький і Дніпровсько-Бузький лимани,
+які в першому запиті не знайшлися як natural=water з точною назвою: в OSM вони
+можуть бути natural=bay або water=lagoon/estuary. Кеш: overpass_mykolaiv_estuaries.json.
+Якщо для лиману в OSM є лише точка (node) без контуру, полігон не вигадуємо.
 """
 
 import json
@@ -32,6 +37,7 @@ RAW_DIR = ROOT / "data" / "raw"
 BOUNDARIES_DIR = ROOT / "data" / "boundaries"
 # Шляхи тримаємо тут, а не в config.py (його паралельно змінює інша задача).
 RAW_CACHE = RAW_DIR / "overpass_mykolaiv_rivers.json"
+ESTUARY_CACHE = RAW_DIR / "overpass_mykolaiv_estuaries.json"
 OBLAST_FILE = BOUNDARIES_DIR / "mykolaiv_oblast.geojson"
 RIVERS_FILE = BOUNDARIES_DIR / "mykolaiv_rivers.geojson"
 WATER_FILE = BOUNDARIES_DIR / "mykolaiv_water.geojson"
@@ -52,6 +58,9 @@ EQUAL_AREA_CRS = "EPSG:6933"
 
 RIVER_NAMES = ["Південний Буг", "Інгул", "Інгулець", "Дніпро", "Мертвовод", "Висунь"]
 LAKE_NAMES = ["Дніпровсько-Бузький лиман", "Бузький лиман", "Тилігульський лиман"]
+
+# Другий запит: шукаємо за підрядком, бо назва в OSM може відрізнятися (name:uk, апостроф).
+ESTUARY_NAME_PART = "Бузьк"
 
 # Контрольні точки для перевірки (lon, lat): міста з підписів fig2.
 CHECK_POINTS = {
@@ -77,12 +86,27 @@ out geom;
 """
 
 
-def fetch_overpass() -> dict:
+def build_estuary_query() -> str:
+    s, w, n, e = BBOX
+    p = ESTUARY_NAME_PART
+    return f"""
+[out:json][timeout:180][bbox:{s},{w},{n},{e}];
+(
+  nwr["natural"~"^(water|bay)$"]["name"~"{p}"];
+  nwr["natural"~"^(water|bay)$"]["name:uk"~"{p}"];
+  nwr["water"~"^(lagoon|estuary|river)$"]["name"~"{p}"];
+  nwr["water"~"^(lagoon|estuary|river)$"]["name:uk"~"{p}"];
+);
+out geom;
+"""
+
+
+def fetch_overpass(cache: Path = RAW_CACHE, query: str = None) -> dict:
     """Один запит; кеш у data/raw; повтори з подвоєнням паузи, потім запасний endpoint."""
-    if RAW_CACHE.exists():
-        return json.loads(RAW_CACHE.read_text(encoding="utf-8"))
+    if cache.exists():
+        return json.loads(cache.read_text(encoding="utf-8"))
     RAW_DIR.mkdir(parents=True, exist_ok=True)
-    query = build_query()
+    query = query or build_query()
     for url in OVERPASS_URLS:
         wait = RETRY_WAIT_S
         for attempt in range(1, RETRIES + 1):
@@ -90,7 +114,7 @@ def fetch_overpass() -> dict:
                 r = requests.post(url, data={"data": query},
                                   headers={"User-Agent": USER_AGENT}, timeout=240)
                 if r.status_code == 200 and r.text.lstrip().startswith("{"):
-                    RAW_CACHE.write_text(r.text, encoding="utf-8")
+                    cache.write_text(r.text, encoding="utf-8")
                     return r.json()
                 print(f"{url} спроба {attempt}: HTTP {r.status_code}")
             except requests.RequestException as ex:
@@ -129,32 +153,55 @@ def build_rivers(elements: list, clip) -> gpd.GeoDataFrame:
     return gdf
 
 
-def build_water(elements: list, clip) -> gpd.GeoDataFrame:
+def element_polygon(e: dict):
+    """Полігон з way (кільце) або relation (outer/inner); node без контуру дає None."""
+    if e["type"] == "way" and "geometry" in e:
+        ln = way_line(e)
+        return Polygon(ln) if ln.is_ring else rings_to_polygon([ln])
+    if e["type"] == "relation":
+        outer = [LineString([(p["lon"], p["lat"]) for p in m["geometry"]])
+                 for m in e["members"]
+                 if m["type"] == "way" and m.get("role") == "outer" and "geometry" in m]
+        inner = [LineString([(p["lon"], p["lat"]) for p in m["geometry"]])
+                 for m in e["members"]
+                 if m["type"] == "way" and m.get("role") == "inner" and "geometry" in m]
+        g = rings_to_polygon(outer)
+        if inner:
+            g = g.difference(rings_to_polygon(inner))
+        return g
+    return None
+
+
+def build_water(elements: list, clip, estuary_elements: list = ()) -> gpd.GeoDataFrame:
     rows = []
     for name in LAKE_NAMES:
         polys = []
         for e in elements:
             if e.get("tags", {}).get("name") != name or e["tags"].get("natural") != "water":
                 continue
-            if e["type"] == "way" and "geometry" in e:
-                ln = way_line(e)
-                if ln.is_ring:
-                    polys.append(Polygon(ln))
-                else:
-                    polys.append(rings_to_polygon([ln]))
-            elif e["type"] == "relation":
-                outer = [LineString([(p["lon"], p["lat"]) for p in m["geometry"]])
-                         for m in e["members"]
-                         if m["type"] == "way" and m.get("role") == "outer" and "geometry" in m]
-                inner = [LineString([(p["lon"], p["lat"]) for p in m["geometry"]])
-                         for m in e["members"]
-                         if m["type"] == "way" and m.get("role") == "inner" and "geometry" in m]
-                g = rings_to_polygon(outer)
-                if inner:
-                    g = g.difference(rings_to_polygon(inner))
+            g = element_polygon(e)
+            if g is not None:
                 polys.append(g)
         if not polys:
             print("УВАГА: немає полігона для", name)
+            continue
+        geom = unary_union(polys).intersection(clip)
+        rows.append({"name": name, "source": SOURCE, "license": LICENSE, "geometry": geom})
+
+    # Лимани з другого запиту: назва береться з тегу name (або name:uk), не вигадується.
+    by_name = {}
+    for e in estuary_elements:
+        tags = e.get("tags", {})
+        name = tags.get("name") or tags.get("name:uk")
+        g = element_polygon(e)
+        kind = f'{e["type"]} {e["id"]} natural={tags.get("natural")} water={tags.get("water")}'
+        if g is None or g.is_empty:
+            print("УВАГА: без полігона (лише точка або порожньо):", name, kind)
+            continue
+        print("Полігон лиману:", name, kind)
+        by_name.setdefault(name, []).append(g)
+    for name, polys in by_name.items():
+        if any(r["name"] == name for r in rows):
             continue
         geom = unary_union(polys).intersection(clip)
         rows.append({"name": name, "source": SOURCE, "license": LICENSE, "geometry": geom})
@@ -181,7 +228,10 @@ def main():
     clip = oblast.buffer(CLIP_BUFFER_DEG)
 
     rivers = build_rivers(elements, clip)
-    water = build_water(elements, clip)
+    estuaries = fetch_overpass(ESTUARY_CACHE, build_estuary_query())["elements"]
+    print("Елементів у відповіді про лимани:",
+          [(e["type"], e["id"], e.get("tags", {}).get("name")) for e in estuaries])
+    water = build_water(elements, clip, estuaries)
     rivers.to_file(RIVERS_FILE, driver="GeoJSON")
     water.to_file(WATER_FILE, driver="GeoJSON")
 

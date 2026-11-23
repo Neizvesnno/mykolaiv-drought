@@ -22,7 +22,7 @@ import matplotlib.patheffects as pe
 import numpy as np
 import xarray as xr
 from matplotlib.colors import TwoSlopeNorm
-from shapely.geometry import Point, box
+from shapely.geometry import MultiPolygon, Point, Polygon, box
 from shapely.ops import nearest_points, unary_union
 
 from src.config import BOUNDARIES_DIR, FIGURES_DIR, PROCESSED_DIR
@@ -135,8 +135,22 @@ def draw_water(ax, rivers, water, labels=True):
                     fontweight="bold", ha=ha, va="center", path_effects=halo)
 
 
+def without_holes(geom):
+    """Геометрія лише із зовнішніх кілець (Polygon або MultiPolygon).
+
+    Дірки суші TerraClimate це клітинки води в лимані; їхній контур з білим
+    ореолом лягав би поверх синього лиману, тож для ліній меж дірки відкидаємо.
+    """
+    if geom.geom_type == "Polygon":
+        return Polygon(geom.exterior)
+    if geom.geom_type == "MultiPolygon":
+        return MultiPolygon([Polygon(g.exterior) for g in geom.geoms])
+    return geom
+
+
 def draw_rayon_borders(ax, geoms):
     """Чорні межі районів із тонким білим ореолом під лінією."""
+    geoms = gpd.GeoSeries([without_holes(g) for g in geoms.geometry])
     geoms.boundary.plot(ax=ax, color=RAYON_COLOR, linewidth=RAYON_LW,
                         path_effects=[pe.withStroke(linewidth=HALO_LW,
                                                     foreground=RAYON_HALO)])
@@ -173,7 +187,7 @@ def make_maps():
                              shading="flat")
         draw_rayon_borders(ax, clipped)
         draw_water(ax, rivers, water)
-        gpd.GeoSeries([land]).boundary.plot(ax=ax, color="black", linewidth=1.2)
+        gpd.GeoSeries([without_holes(land)]).boundary.plot(ax=ax, color="black", linewidth=1.2)
         for name, x, y, _ in CITIES:
             ax.plot(x, y, "o", color="black", markersize=5,
                     markeredgecolor="white", markeredgewidth=1)

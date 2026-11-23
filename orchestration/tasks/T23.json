@@ -1,0 +1,45 @@
+{
+  "id": "T23",
+  "day": "2026-11-23",
+  "role": "geodata",
+  "title": "Бузький і Дніпровсько-Бузький лимани на картах",
+  "depends_on": [
+    "T21",
+    "T22"
+  ],
+  "inputs": [
+    "src/rivers.py",
+    "data/raw/overpass_mykolaiv_rivers.json",
+    "data/boundaries/mykolaiv_oblast.geojson",
+    "data/boundaries/mykolaiv_water.geojson",
+    "src/fig_maps.py",
+    "src/fig_frequency.py"
+  ],
+  "instructions": "Павло (23.11) дозволив у чаті ОДИН додатковий запит до Overpass, щоб на картах були Бузький і Дніпровсько-Бузький лимани (зараз там біле місце). У T21 вони не знайшлися як natural=water з точною назвою: імовірно в OSM це natural=bay (часто relation або лише точка-node), water=lagoon/estuary, або назва записана інакше (name:uk, апостроф, «лиман» з іншим словом). Додай у src/rivers.py другий запит з окремим кешем data/raw/overpass_mykolaiv_estuaries.json: nwr з natural~water|bay або water~lagoon|estuary|river і name або name:uk, що містить «Бузьк» (обидва лимани), у bbox області, out geom. Повтори при HTTP-помилці як у fetch_overpass (без нових запитів, коли кеш є). Збери полігони (way-кільця, relation outer/inner як у build_water) і додай їх до mykolaiv_water.geojson разом із Тилігульським (поля name, source, license, area_km2_in_area), обріж по контуру області з буфером як зараз. Якщо в OSM лиман є лише точкою, без полігона, не вигадуй контур і не будуй його з інших даних (наприклад, контур області мінус суша TerraClimate): чесно напиши в issues, що полігона немає. Перший запит і його кеш не змінюй. Потім перезапусти .venv/bin/python src/rivers.py, .venv/bin/python -m src.fig_maps, .venv/bin/python -m src.fig_frequency і .venv/bin/python -m src.slides_draft. У fig_*.py нічого не міняй, хіба що лиман на fig3 виходить за межі або ламає підписи районів. Контрольна картинка (контур області + лимани) — у scratchpad /private/tmp/claude-501/-Users-lucky777strike-Desktop-work-test-case/78833e3c-761a-4635-9d1d-461d124ec454/scratchpad/t23/, не в репо. Не чіпай summary.json, docs/, prompts.md, state.json.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "mykolaiv_water.geojson містить Тилігульський, Бузький і Дніпровсько-Бузький лимани (або чесно сказано, якого немає в OSM як полігона)",
+      "how": "перелік name і площ; Supervisor малює контрольну картинку"
+    },
+    {
+      "id": "A2",
+      "check": "Лимани на fig2 і fig3 сині й лежать на місці білої плями біля Миколаєва та Очакова; підписи районів не перекриті",
+      "how": "переглянути PNG"
+    },
+    {
+      "id": "A3",
+      "check": "Лише один новий мережевий запит; повторний запуск rivers.py бере обидва кеші й дає той самий результат",
+      "how": "md5 до і після повторного запуску"
+    }
+  ],
+  "outputs": [
+    "src/rivers.py",
+    "data/boundaries/mykolaiv_water.geojson",
+    "figures/fig2_maps.png",
+    "figures/fig3_frequency.png",
+    "slides/presentation_draft.pdf"
+  ],
+  "fallback": "Якщо overpass-api.de недоступний — той самий запит через overpass.kumi.systems; якщо й він ні — blocked. Інших джерел не використовуй.",
+  "max_attempts": 2
+}

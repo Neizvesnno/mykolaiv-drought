@@ -1,0 +1,95 @@
+{
+ "task_id": "T23",
+ "status": "done",
+ "summary": "Один додатковий запит до Overpass (одна спроба HTTP 502, друга успішна; кеш data/raw/overpass_mykolaiv_estuaries.json, 2751325 байт) знайшов обидва лимани як relation з natural=bay: Дніпровсько-Бузький (relation 9419998) і Бузький (relation 9953396). Полігони зібрано як outer/inner, обрізано по контуру області з буфером і додано до mykolaiv_water.geojson разом із Тилігульським. fig2, fig3 і чернетку слайдів перезбудовано, fig_*.py не змінювались. Спроба 2: прибрано білі прямокутники в лимані (межі малюються лише по зовнішніх кільцях).",
+ "files": [
+  {
+   "path": "src/rivers.py",
+   "purpose": "Другий запит (build_estuary_query, fetch_overpass з параметрами кешу), element_polygon, build_water з лиманами з name",
+   "committed": false
+  },
+  {
+   "path": "data/raw/overpass_mykolaiv_estuaries.json",
+   "purpose": "Кеш сирої відповіді другого запиту (недовірені дані)",
+   "committed": false
+  },
+  {
+   "path": "data/boundaries/mykolaiv_water.geojson",
+   "purpose": "Три лимани: Тилігульський, Дніпровсько-Бузький, Бузький",
+   "committed": false
+  },
+  {
+   "path": "figures/fig2_maps.png",
+   "purpose": "Перезбудовано з лиманами",
+   "committed": false
+  },
+  {
+   "path": "figures/fig3_frequency.png",
+   "purpose": "Перезбудовано з лиманами",
+   "committed": false
+  },
+  {
+   "path": "slides/presentation_draft.pdf",
+   "purpose": "Перезібрана чернетка (0,59 МБ)",
+   "committed": false
+  },
+  {
+   "path": "src/fig_maps.py",
+   "purpose": "Додано without_holes(); draw_rayon_borders і контур суші малюються без внутрішніх кілець",
+   "committed": false
+  },
+  {
+   "path": "src/fig_frequency.py",
+   "purpose": "Контур суші на fig3 через without_holes (імпорт з fig_maps)",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "mykolaiv_water.geojson: Тилігульський лиман 128.434397 км2, Дніпровсько-Бузький лиман 546.421078 км2, Бузький лиман 176.475286 км2 (в межах області+буфер 0,05, EPSG:6933). Контрольна картинка: /private/tmp/claude-501/-Users-lucky777strike-Desktop-work-test-case/78833e3c-761a-4635-9d1d-461d124ec454/scratchpad/t23/check.png"
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "Спроба 2: переглянуто fig2 і fig3 після виправлення: лимани сині, суцільні, без білих прямокутників і зайвих чорних рамок; зовнішній контур області та межі районів на місці; підписи районів і міст не перекриті. Причина попередньої дірки: внутрішні кільця суші TerraClimate (клітинки води в лимані), чиї контури з білим ореолом лягали поверх води."
+  },
+  {
+   "criterion_id": "A3",
+   "passed": true,
+   "evidence": "Мережевий запит один успішний (один HTTP 502 перед ним). Повторний запуск rivers.py без запитів: md5 mykolaiv_water.geojson 73fb30710ef5c978dee42fbc0a4177c1 до і після, mykolaiv_rivers.geojson 692a67764dfa26039b38c6e7d164fa4e до і після (не змінився)."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "У OSM Дніпровсько-Бузький лиман (relation 9419998) і Бузький лиман (relation 9953396) мають тег natural=bay (не natural=water)",
+   "source": "data/raw/overpass_mykolaiv_estuaries.json",
+   "verified": true
+  },
+  {
+   "claim": "Дані OSM поширюються за ODbL 1.0, атрибуція © OpenStreetMap contributors",
+   "source": "поле license у GeoJSON; https://www.openstreetmap.org/copyright",
+   "verified": false
+  }
+ ],
+ "issues": [
+  "Площі лиманів це частини в межах контуру області з буфером 0,05°: контур області містить акваторію, тож обрізання лимани не прибрало; реальні площі лиманів більші.",
+  "Інгул: відстань до Баштанки 12.273307 км (стара проблема T21, не змінилась).",
+  "Перший запит і його кеш не змінювались; Дніпро, як і раніше, поза областю."
+ ],
+ "handoff": [
+  "mykolaiv_water.geojson тепер має 3 рядки: name, area_km2_in_area, source, license; fig_maps.load_water обробляє їх без змін.",
+  "Запуск: .venv/bin/python src/rivers.py (бере обидва кеші), потім python -m src.fig_maps, src.fig_frequency, src.slides_draft.",
+  "Назви лиманів взято з тегу name в OSM."
+ ],
+ "commands_run": [
+  ".venv/bin/python src/rivers.py (з одним новим запитом)",
+  ".venv/bin/python src/rivers.py (повторно, кеш, md5 однакові)",
+  ".venv/bin/python -m src.fig_maps",
+  ".venv/bin/python -m src.fig_frequency",
+  ".venv/bin/python -m src.slides_draft",
+  "перезапуск src.fig_maps, src.fig_frequency, src.slides_draft після without_holes",
+  "python3 orchestration/validate.py T23"
+ ]
+}

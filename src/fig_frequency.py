@@ -27,7 +27,7 @@ from matplotlib.colors import Normalize
 
 from src.config import BOUNDARIES_DIR, FIGURES_DIR, PROCESSED_DIR
 from src.fig_maps import (RAYON_LW, draw_rayon_borders, draw_water,
-                          land_polygon, load_water)
+                          land_polygon, load_water, without_holes)
 
 OUT_PATH = FIGURES_DIR / "fig3_frequency.png"
 FIG_SIZE = (10, 9.5)
@@ -80,7 +80,7 @@ def make_frequency_map():
     ax = fig.add_axes([0.0, 0.17, 1.0, 0.75])
     rayons.plot(ax=ax, color=[colors[n] for n in rayons["name"]], edgecolor="none")
     draw_rayon_borders(ax, rayons)
-    gpd.GeoSeries([land]).boundary.plot(ax=ax, color="black", linewidth=RAYON_LW)
+    gpd.GeoSeries([without_holes(land)]).boundary.plot(ax=ax, color="black", linewidth=RAYON_LW)
     draw_water(ax, rivers, water)
 
     # Підписи районів: representative_point лежить гарантовано всередині району.
