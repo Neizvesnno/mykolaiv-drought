@@ -29,7 +29,7 @@ python3.13 -m venv .venv
 .venv/bin/python -m src.run_all
 ```
 
-`src/run_all.py` по черзі запускає весь ланцюжок (check_env, download, boundaries, rivers, season, drought_years, causes, три рисунки, download_yields, yield_tables, yields, build_slides, build_methodology, build_prompts_pdf), друкує, що робить кожен крок, і зупиняється на першій помилці. Лише перелік кроків: `.venv/bin/python -m src.run_all --list`; пропустити крок: `--skip check_env`.
+`src/run_all.py` по черзі запускає весь ланцюжок (check_env, download, check_data, boundaries, rivers, season, drought_years, causes, три рисунки, download_yields, yield_tables, yields, build_slides, build_methodology, build_prompts_pdf), друкує, що робить кожен крок, і зупиняється на першій помилці. Лише перелік кроків: `.venv/bin/python -m src.run_all --list`; пропустити крок: `--skip check_env`.
 
 Передумови:
 

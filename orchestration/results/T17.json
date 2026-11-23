@@ -1,0 +1,39 @@
+{
+ "task_id": "T17",
+ "status": "done",
+ "summary": "Чистий клон: команда з README не проходить, check_env падає з KeyError 'year' (config.TERRACLIMATE_OPENDAP має {var} і {year}). З --skip check_env завантажено TerraClimate й OSM, дані (summary.json, causes.json, yields.csv, інші csv і nc) збігаються з оригіналом, три ключові файли байт у байт; крок download_yields не відпрацював, бо stat.gov.ua перейшов на /maintenance, PDF Держстату скопійовано з робочої папки. 3 PDF відкриваються, 4 слайди, 38 URL: 35 з HTTP 200, 3 з 403/405. 27 чисел звірено, розбіжностей немає. Звіт у docs/qa_report.md.",
+ "files": [
+  {"path": "docs/qa_report.md", "purpose": "QA-звіт фінальної перевірки з нуля", "committed": false}
+ ],
+ "checks": [
+  {"criterion_id": "A1", "passed": false, "evidence": "Чистий клон: run_all падає на check_env (KeyError 'year', src/check_env.py:46). З --skip check_env: download, boundaries, rivers, season, drought_years, causes, рисунки OK; download_yields не пройшов (stat.gov.ua 307 /maintenance), PDF скопійовано з робочої папки, решта кроків код 0. summary.json, causes.json, yields.csv байт у байт однакові (cmp); 0 розбіжностей у 262 і 148 значеннях; season_oblast, drought_years, causes csv і два nc однакові. Дані відтворились, але команда з README ні."},
+  {"criterion_id": "A2", "passed": true, "evidence": "27 чисел звірено з summary.json, causes.json, yields.csv: 4/33, 13/35, 17/68, 1 із 8,25 / 2,69 / 4,00, 1,92 °C, -11,36 %, 80,40 мм, 114,08 мм, 70,48 %, -41,88 %, -29,96 %, -16,51 %, райони 2,84/2,99/3,25/3,43, PDSI -6,34/-5,92/-5,73/-4,20 тощо. Дрібниця: 'близько 30 % / 70 %' у методології замість 29,52 / 70,48 %."},
+  {"criterion_id": "A3", "passed": true, "evidence": "curl -IL для 38 URL (README, docs, prompts.md, PDF, нотатки pptx, yields.csv): 35 HTTP 200; zakon.rada.gov.ua 403 без User-Agent, 200 з ним; producer.com 403 і agris.fao.org 405 на HEAD (лише docs/sanity_sources.md). stat.gov.ua наприкінці перевірки віддає 307 /maintenance (тимчасово). Усі посилання з README і PDF відкрились."}
+ ],
+ "facts": [
+  {"claim": "stat.gov.ua 23.11.2026 під час перевірки віддає 307 на /maintenance для всіх адрес", "source": "curl -I https://stat.gov.ua/", "verified": true},
+  {"claim": "check_env.py викликає TERRACLIMATE_OPENDAP.format(var=...) без year, шаблон у config.py має {year}", "source": "src/check_env.py:46, src/config.py:72", "verified": true}
+ ],
+ "issues": [
+  "README: перша команда run_all падає на check_env (KeyError 'year'); T16 перевіряв лише з --skip check_env. Не виправлено, бо код правити не дозволено.",
+  "download_yields не перевірено з нуля через maintenance на stat.gov.ua; потрібен повтор.",
+  "producer.com 403 і agris.fao.org 405 для curl: перевірити в браузері.",
+  "Методологія: 'близько 30 % / 70 %' замість 29,52 / 70,48 %.",
+  "Немає окремого кроку перевірки даних (пропуски, діапазони, одиниці) з чекліста вакансії.",
+  "Розділи 3 і 7 prompts.md ще не заповнені (Павло, 24.11)."
+ ],
+ "handoff": [
+  "Виправити src/check_env.py (передати year) і повторити run_all без --skip у чистому клоні; повторити src.download_yields, коли stat.gov.ua відновиться.",
+  "Клон і логи: scratchpad/t17/."
+ ],
+ "commands_run": [
+  "git clone https://github.com/Neizvesnno/mykolaiv-drought",
+  "python3.13 -m venv .venv; .venv/bin/pip install -r requirements.txt",
+  ".venv/bin/python -m src.run_all",
+  ".venv/bin/python -m src.run_all --skip check_env",
+  ".venv/bin/python -m src.run_all --skip (усе до download_yields) після копіювання PDF",
+  "curl -IL для 38 URL",
+  "cmp і порівняння json/csv/nc",
+  "python3 orchestration/validate.py T17"
+ ]
+}

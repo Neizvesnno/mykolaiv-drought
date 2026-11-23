@@ -136,6 +136,12 @@ def expected_strings():
     exp["tmax"] = f"{fmt(diff['tmax_c'])} °C"
     exp["pet"] = f"{fmt(diff['pet_mm'])} мм ({fmt(diff['pet_pct_of_first'], sign=True)} %)"
     exp["баланс"] = f"{fmt(abs(diff['balance_mm']))} мм"
+    # Частки в погіршенні балансу: рахуємо з точних значень, не з округлених.
+    share_pet = diff["pet_mm"] / abs(diff["balance_mm"]) * 100
+    share_ppt = abs(diff["ppt_mm"]) / abs(diff["balance_mm"]) * 100
+    exp["частка опадів"] = f"Частка опадів у погіршенні становить {fmt(share_ppt)} %"
+    exp["частка випаровування"] = f"частка випаровування {fmt(share_pet)} %"
+    exp["лісосмуги"] = f"{fmt(share_pet)} % погіршення водного балансу дало випаровування"
     tr = c["trends"]
     exp["тренд опадів"] = f"{fmt(tr['ppt']['slope_per_decade'])} мм за 10 років (p = {fmt(tr['ppt']['p_value'], 3)})"
     exp["тренд tmax"] = f"{fmt(tr['tmax']['slope_per_decade'], sign=True)} °C"

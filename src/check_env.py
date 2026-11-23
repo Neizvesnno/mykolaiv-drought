@@ -1,74 +1,78 @@
 """Перевірка середовища: імпорт пакетів і доступність TerraClimate OPeNDAP.
 
-Що робить: імпортує всі прямі залежності, друкує їхні версії, відкриває
-лише метадані PDSI з THREDDS (дані не завантажуються) і друкує розмір сітки,
-перший та останній місяць у часовому вимірі.
-Звідки дані: TERRACLIMATE_OPENDAP з src/config.py.
+Що робить: імпортує всі прямі залежності, друкує їхні версії, потім для кожної
+змінної з config.VARIABLES відкриває річні файли THREDDS за першим (FIRST_YEAR)
+і останнім (LAST_COMPLETE_YEAR) роком. Читаються лише метадані (масиви не
+завантажуються). Саме ці файли використовує src/download.py.
+Звідки дані: config.TERRACLIMATE_OPENDAP.
+Код виходу: 0 усе гаразд; 1 якщо пакета немає, мережі немає або файл не відкрився.
 Запуск з кореня репозиторію: .venv/bin/python src/check_env.py
 """
 import sys
-from pathlib import Path
 from importlib import import_module, metadata
+from pathlib import Path
 
 # Дозволяє запуск як `python src/check_env.py` (інакше src не в шляху імпорту).
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.config import TERRACLIMATE_OPENDAP, LAST_COMPLETE_YEAR, FIRST_YEAR
+from src.config import FIRST_YEAR, LAST_COMPLETE_YEAR, TERRACLIMATE_OPENDAP, VARIABLES
 
 PACKAGES = [
     "xarray", "netCDF4", "pandas", "numpy", "geopandas", "shapely",
     "pyogrio", "regionmask", "matplotlib", "requests", "jsonschema",
 ]
-CHECK_VAR = "pdsi"
-# Річні файли THREDDS: ім'я змінної в них "PDSI" (регістр важливий).
-YEARLY_URL = (
-    "http://thredds.northwestknowledge.net:8080/thredds/dodsC/"
-    "TERRACLIMATE_ALL/data/TerraClimate_{var}_{year}.nc"
-)
-YEARLY_VAR = "PDSI"
+MONTHS_PER_YEAR = 12  # у річному файлі має бути рівно 12 місяців
 
 
-def version_of(name, module):
-    # jsonschema прибирає __version__, тому беремо версію з метаданих пакета.
-    return metadata.version(name)
-
-
-def main() -> None:
+def check_packages() -> bool:
+    ok = True
     print(f"Python {sys.version.split()[0]}")
     for name in PACKAGES:
-        module = import_module(name)
-        print(f"{name:12s} {version_of(name, module)}")
+        try:
+            import_module(name)
+            # Версію беремо з метаданих пакета: jsonschema прибрав __version__.
+            print(f"{name:12s} {metadata.version(name)}")
+        except ImportError as err:
+            print(f"{name:12s} НЕ ВСТАНОВЛЕНО ({err})")
+            ok = False
+    return ok
 
+
+def check_remote() -> bool:
     import xarray as xr
 
-    # 1) Агрегований файл з config. Станом на перевірку сервер віддає для нього
-    #    порожню відповідь (HTTP 200, 0 байт), тому очікуємо помилку.
-    url = TERRACLIMATE_OPENDAP.format(var=CHECK_VAR)
-    print(f"\nOPeNDAP (агрегований, з config): {url}")
-    try:
-        ds = xr.open_dataset(url, engine="netcdf4")
-        da = ds[CHECK_VAR]
-        print(f"Сітка: {dict(ds.sizes)}")
-        print(f"Перший місяць: {str(ds['time'].values[0])[:7]}")
-        print(f"Останній місяць: {str(ds['time'].values[-1])[:7]}")
-        ds.close()
-        return
-    except OSError as err:
-        print(f"НЕ ВІДКРИВАЄТЬСЯ: {str(err)[:90]}")
+    ok = True
+    for var in VARIABLES:
+        for year in (FIRST_YEAR, LAST_COMPLETE_YEAR):
+            url = TERRACLIMATE_OPENDAP.format(var=var, year=year)
+            try:
+                with xr.open_dataset(url, engine="netcdf4") as ds:
+                    n_time = ds.sizes["time"]
+                    first = str(ds["time"].values[0])[:7]
+                    last = str(ds["time"].values[-1])[:7]
+                    if var not in ds.data_vars:
+                        raise KeyError(f"змінної {var} немає у файлі")
+                    if n_time != MONTHS_PER_YEAR:
+                        raise ValueError(f"місяців {n_time}, очікувалось {MONTHS_PER_YEAR}")
+                print(f"OK   {var:5s} {year}: {first}..{last}, {n_time} міс.")
+            except Exception as err:  # мережеві та серверні збої бувають різного типу
+                print(f"FAIL {var:5s} {year}: {url}\n     {type(err).__name__}: {str(err)[:120]}")
+                ok = False
+    return ok
 
-    # 2) Запасний варіант: окремі річні файли (змінна PDSI великими літерами).
-    print("\nЗапасний варіант: річні файли")
-    first_year, last_year = FIRST_YEAR, LAST_COMPLETE_YEAR
-    ds_first = xr.open_dataset(YEARLY_URL.format(var=YEARLY_VAR, year=first_year), engine="netcdf4")
-    ds_last = xr.open_dataset(YEARLY_URL.format(var=YEARLY_VAR, year=last_year), engine="netcdf4")
-    print(f"Змінна {YEARLY_VAR}: dims={ds_last[YEARLY_VAR].dims}")
-    print(f"Сітка (один рік): {dict(ds_last.sizes)}")
-    print(f"Перший місяць: {str(ds_first['time'].values[0])[:7]}")
-    print(f"Останній місяць: {str(ds_last['time'].values[-1])[:7]}")
-    print(f"LAST_COMPLETE_YEAR у config = {LAST_COMPLETE_YEAR}")
-    ds_first.close()
-    ds_last.close()
+
+def main() -> int:
+    ok = check_packages()
+    print(f"\nTerraClimate THREDDS, лише метадані: {len(VARIABLES)} змінних x "
+          f"роки {FIRST_YEAR} і {LAST_COMPLETE_YEAR}")
+    ok = check_remote() and ok
+    if not ok:
+        print("\nПОМИЛКА: середовище не готове (див. FAIL вище). "
+              "Без мережі до THREDDS download.py не завантажить дані.")
+        return 1
+    print("\nСередовище готове.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

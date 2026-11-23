@@ -1,0 +1,48 @@
+{
+  "id": "T28",
+  "day": "2026-11-23",
+  "role": "analysis",
+  "title": "Виправити check_env і додати крок перевірки даних (знахідки T17)",
+  "depends_on": [
+    "T17"
+  ],
+  "inputs": [
+    "docs/qa_report.md",
+    "src/check_env.py",
+    "src/config.py",
+    "src/run_all.py",
+    "src/download.py",
+    "src/build_methodology.py",
+    "docs/methodology.md",
+    "data/raw/",
+    "data/processed/"
+  ],
+  "instructions": "Знахідки фінальної перевірки T17 (docs/qa_report.md). (1) Критично: перший крок README у чистому клоні падає — src/check_env.py:46 робить TERRACLIMATE_OPENDAP.format(var=CHECK_VAR), а шаблон у config.py тепер має {var} і {year} (річні файли), тож KeyError: 'year'. Перепиши check_env так, щоб він перевіряв те, чим реально користується download.py: річні файли з config.TERRACLIMATE_OPENDAP для першого і останнього року (FIRST_YEAR, LAST_COMPLETE_YEAR) і всіх змінних з config.VARIABLES (відкрити метадані, не завантажувати масиви), без старої спроби агрегованого файлу і без дубльованого YEARLY_URL, якщо він більше не потрібен; коли мережі немає — зрозуміле повідомлення і ненульовий код. Перевір: .venv/bin/python src/check_env.py проходить (мережа до THREDDS дозволена лише для метаданих). (2) Чекліст вакансії вимагає «пошук пропусків і помилок, перевірка одиниць», а окремого кроку немає. Напиши src/check_data.py: для data/raw/terraclimate_*.nc — суцільність місяців 1958-01…2025-12 без пропусків і дублів, кількість NaN-клітинок на місяць стабільна (вода), діапазони й одиниці за атрибутами (PDSI приблизно −10…+10 без одиниць, ppt мм ≥ 0, soil мм ≥ 0, tmax °C у правдоподібних межах, pet мм ≥ 0); для data/processed — summary.json має очікувані ключі, drought_years.csv 68 років без пропусків, yields.csv без від'ємних урожаїв і з джерелом у кожному рядку. Друкує таблицю перевірок OK/FAIL і повертає ненульовий код при FAIL; пороги — константами вгорі з коментарем «чому». Додай крок check_data у src/run_all.py одразу після download (і онови README лише в рядку з переліком кроків, якщо він там є). (3) У docs/methodology.md розділ «Перевірки» — одне речення про src/check_data.py і що він перевіряє; у розділах 5 і 8 «близько 30 % … 70 %» заміни на точні 29,52 % і 70,48 % з causes.json (правило точності: відсотки 2 знаки) — переконайся, що src/build_methodology.py звіряє ці числа, і перезбери methodology.pdf. Потім прожени .venv/bin/python -m src.run_all на кешах (з check_env, мережа для метаданих дозволена) і перевір md5 summary.json і yields.csv незмінні. Збірки PDF лише послідовно. Не чіпай prompts.md, slides тексти, state.json.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "check_env проходить; run_all від першого кроку без --skip завершується з кодом 0 на кешах",
+      "how": "Supervisor запускає run_all у робочій папці і check_env у чистому клоні"
+    },
+    {
+      "id": "A2",
+      "check": "check_data перевіряє пропуски, діапазони й одиниці і дає OK на наших даних, FAIL на зіпсованій копії",
+      "how": "Supervisor псує копію одного файлу в scratchpad і запускає перевірку"
+    },
+    {
+      "id": "A3",
+      "check": "Методологія має 29,52 % і 70,48 %, PDF перезібрано, summary.json і yields.csv не змінились",
+      "how": "текст PDF і md5"
+    }
+  ],
+  "outputs": [
+    "src/check_env.py",
+    "src/check_data.py",
+    "src/run_all.py",
+    "README.md",
+    "docs/methodology.md",
+    "methodology.pdf"
+  ],
+  "fallback": "Якщо THREDDS недоступний — check_env має чесно впасти з поясненням; перевір логіку на моку або опиши в issues.",
+  "max_attempts": 2
+}

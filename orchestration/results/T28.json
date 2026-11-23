@@ -1,0 +1,88 @@
+{
+ "task_id": "T28",
+ "status": "done",
+ "summary": "check_env переписано під річні файли config.TERRACLIMATE_OPENDAP: 5 змінних x роки 1958 і 2025, лише метадані, код 0 (без мережі код 1 з поясненням). Додано src/check_data.py (34 перевірки: суцільність 816 місяців, NaN-маска 602 клітинки стабільна, одиниці, діапазони, summary.json, drought_years.csv 68 років, yields.csv), крок вбудовано в run_all після download. У методології розділ «Перевірки» доповнено, 29,52 % і 70,48 % замість «близько 30/70 %», build_methodology звіряє їх (60 чисел), methodology.pdf перезібрано. run_all без --skip: код 0, md5 summary.json і yields.csv не змінились.",
+ "files": [
+  {
+   "path": "src/check_env.py",
+   "purpose": "перевірка пакетів і метаданих річних файлів THREDDS",
+   "committed": false
+  },
+  {
+   "path": "src/check_data.py",
+   "purpose": "перевірка пропусків, діапазонів, одиниць у data/raw і data/processed",
+   "committed": false
+  },
+  {
+   "path": "src/run_all.py",
+   "purpose": "крок check_data після download",
+   "committed": false
+  },
+  {
+   "path": "src/build_methodology.py",
+   "purpose": "звірка часток 29,52 % і 70,48 % з causes.json",
+   "committed": false
+  },
+  {
+   "path": "README.md",
+   "purpose": "перелік кроків run_all з check_data",
+   "committed": false
+  },
+  {
+   "path": "docs/methodology.md",
+   "purpose": "речення про check_data, точні частки у розд. 5 і 8",
+   "committed": false
+  },
+  {
+   "path": "methodology.pdf",
+   "purpose": "перезібрана методологія",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "check_env: 10 рядків OK (PDSI, ppt, soil, tmax, pet x 1958, 2025), 'Середовище готове'. .venv/bin/python -m src.run_all без --skip: exit=0, 'Усе виконано за 104.8 с', 17 кроків. Лог у scratchpad/run_all.log. Чистий клон не перевірявся (це робить Supervisor)."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "check_data на наших даних: 'Перевірок 34, FAIL 0', код 0. На зіпсованій копії ppt (обрізано 3 місяці, значення -5, units='m'): 4 FAIL (суцільність 813 з 816, NaN [0, 602], одиниці 'm', діапазон -5.0..232.8), код 1. Копія в scratchpad/bad, запуск --raw-dir."
+  },
+  {
+   "criterion_id": "A3",
+   "passed": true,
+   "evidence": "pypdf з methodology.pdf: '29,52' 1 раз, '70,48' 2 рази, 'близько 30' немає. build_methodology: 'Звірка: 60 чисел і параметрів збігаються'. md5 summary.json 096ea6dfc3b5aa77ceff727bcb22ddf5 і yields.csv 4a8440825ea9ac342d345d21cde2e434 до і після run_all однакові."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "Частки в погіршенні балансу: опади 29,52 %, випаровування 70,48 %",
+   "source": "data/processed/causes.json periods.difference: ppt -33,680 мм, pet 80,400 мм, balance -114,081 мм",
+   "verified": true
+  },
+  {
+   "claim": "THREDDS віддає метадані річних файлів усіх 5 змінних за 1958 і 2025, по 12 місяців",
+   "source": "вивід src/check_env.py 23.11.2026",
+   "verified": true
+  }
+ ],
+ "issues": [
+  "run_all повторно збирає slides/presentation.* і docs/slide_texts.md (build_slides), зміст за md5 не перевірявся.",
+  "Діапазони в check_data навмисно широкі (ловлять збій одиниць, а не екстремуми).",
+  "Чистий клон і download_yields (stat.gov.ua) не перевірялись."
+ ],
+ "handoff": [
+  "check_data: .venv/bin/python src/check_data.py [--raw-dir папка] [--processed-dir папка]; код 1 при FAIL.",
+  "Частки опадів/випаровування в методології рахуються в build_methodology з точних значень causes.json."
+ ],
+ "commands_run": [
+  ".venv/bin/python src/check_env.py",
+  ".venv/bin/python src/check_data.py",
+  ".venv/bin/python src/check_data.py --raw-dir <зіпсована копія>",
+  ".venv/bin/python -m src.run_all (двічі; перший впав на регістрі рядка у build_methodology, виправлено)",
+  "md5 -q data/processed/summary.json data/processed/yields.csv",
+  "python3 orchestration/validate.py T28"
+ ]
+}

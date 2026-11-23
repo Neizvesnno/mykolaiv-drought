@@ -390,8 +390,19 @@
         "T16",
         "T27"
       ],
-      "status": "pending",
-      "attempts": 0
+      "status": "done",
+      "attempts": 1
+    },
+    {
+      "id": "T28",
+      "day": "2026-11-23",
+      "role": "analysis",
+      "title": "Виправити check_env і додати крок перевірки даних (знахідки T17)",
+      "depends_on": [
+        "T17"
+      ],
+      "status": "in_progress",
+      "attempts": 1
     },
     {
       "id": "T18",
@@ -399,7 +410,8 @@
       "role": "supervisor",
       "title": "Повідомлення Валерію з посиланням",
       "depends_on": [
-        "T17"
+        "T17",
+        "T28"
       ],
       "status": "pending",
       "attempts": 0
@@ -686,6 +698,22 @@
       "task": "T16",
       "event": "done",
       "supervisor_check": "Перевірив сам: README прочитав, висновки звірив з summary.json/causes.json/yields.csv (17/68, 4/33 vs 13/35, +1,92 °C, −11,36 %, 70,48 %, 2012 −41,88 %, 2020 −29,96 %, середня −16,51 %); run_all --list — 16 кроків; за звітом прогін на кешах 83 с, md5 summary.json і yields.csv незмінні."
+    },
+    {
+      "time": "2026-11-23T20:50",
+      "task": "T17",
+      "event": "start (спроба 1)"
+    },
+    {
+      "time": "2026-11-23T21:20",
+      "task": "T17",
+      "event": "done",
+      "supervisor_check": "Перевірив сам: відтворив KeyError 'year' у src/check_env.py:46 (шаблон config має {year}) — A1 справді не пройдено, виправлення — T28. Звіт: з --skip check_env результат у чистому клоні збігся байт у байт (summary.json, causes.json, yields.csv); stat.gov.ua під час перевірки був на обслуговуванні — завантаження збірників з нуля перевірити повторно. 35 із 38 посилань 200; 3 відмови — захист від ботів (zakon.rada з User-Agent 200)."
+    },
+    {
+      "time": "2026-11-23T21:20",
+      "task": "T28",
+      "event": "start (спроба 1)"
     }
   ]
 }

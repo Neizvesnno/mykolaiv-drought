@@ -18,11 +18,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # (назва, як запускати, що робить). "file" = `python src/x.py`, "module" = `python -m src.x`.
 # Спосіб запуску взято з docs/methodology.md, розділ «Як відтворити»: скрипти
-# check_env/download/boundaries/rivers/season/drought_years вимагають запуску файлом
+# check_env/check_data/download/boundaries/rivers/season/drought_years вимагають запуску файлом
 # (вони самі додають корінь у sys.path або не мають пакетних імпортів), решта -- модулем.
 STEPS = [
     ("check_env", "file", "перевірка пакетів і доступу до TerraClimate (лише метадані)"),
     ("download", "file", "TerraClimate -> data/raw/terraclimate_*.nc (наявні пропускає)"),
+    ("check_data", "file", "перевірка даних: пропуски, діапазони, одиниці (data/raw, data/processed)"),
     ("boundaries", "file", "межі області й районів з OSM (з кешем)"),
     ("rivers", "file", "ріки й лимани з OSM (з кешем)"),
     ("season", "file", "сезонні значення квітень-вересень по клітинках і по області"),
