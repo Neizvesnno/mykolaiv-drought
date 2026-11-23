@@ -1,0 +1,61 @@
+{
+ "task_id": "T12",
+ "status": "done",
+ "summary": "Створено src/slides_draft.py і slides/presentation_draft.pdf: 4 слайди 16:9 (13,333x7,5 дюйма), рисунки fig1-fig3 на слайдах 1-3, слайд 4 без рисунка у два стовпчики (ризики / що робити). PDF 0,52 МБ. Усі числа читаються з summary.json і yields.csv через fmt(). Переглянуто PNG-превʼю кожного слайда (у scratchpad, не в репо): текст не обрізаний і не налазить на рисунки.",
+ "files": [
+  {
+   "path": "src/slides_draft.py",
+   "purpose": "Збірка PDF; словник SLIDES (title, bullets, figure, note) для заміни текстів у T13; запуск .venv/bin/python -m src.slides_draft",
+   "committed": false
+  },
+  {
+   "path": "slides/presentation_draft.pdf",
+   "purpose": "Чернетка 4 слайдів",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "PDF з 4 сторінок; слайди 1-3 містять fig1_timeline, fig2_maps, fig3_frequency (перегляд PNG-превʼю); слайд 4 без рисунка за задумом."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "Числа беруться в коді: 17 з 68 -> 1 рік із 4,00; 4 із 33 та 13 із 35; worst_years 2025 −6,34, 2007 −5,92, 2020 −5,73, 2024 −4,20; райони 35,2/33,4/30,7/29,1 %; yields.csv 2020 27,0 і 2021 42,3 ц/га. Літералів чисел у текстах немає. Числа всередині самих PNG (з T08-T10) не змінювались."
+  },
+  {
+   "criterion_id": "A3",
+   "passed": true,
+   "evidence": "Заголовок 30 pt, основний текст 20 pt (стовпчики 24 pt заголовки), джерело 12 pt дрібно; ls -l: 0,52 МБ ≤ 10 МБ."
+  },
+  {
+   "criterion_id": "A4",
+   "passed": true,
+   "evidence": "Команда .venv/bin/python -m src.slides_draft з кореня виводить «Збережено .../slides/presentation_draft.pdf (0.52 МБ)»."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "17 підтверджених із 68 (1 рік із 4,00); періоди 4/33 і 13/35; worst_years 2025 −6,34, 2007 −5,92, 2020 −5,73, 2024 −4,20; райони 35,2/33,4/30,7/29,1 %; урожайність пшениці 2020 27,0, 2021 42,3 ц/га",
+   "source": "data/processed/summary.json; data/processed/yields.csv",
+   "verified": true
+  }
+ ],
+ "issues": [
+  "Тексти чорнові; на слайді 4 колонка «Що з цим робити» містить заглушку «[чернетка: текст напише T13]» і прості формулювання без агрономічних порад.",
+  "Рисунки fig2/fig3 мають власні підписи/джерело дрібним шрифтом усередині PNG (з T09/T10), на слайді вони менші за 18 pt: це частина рисунків, не змінювалось.",
+  "На слайді 3 заголовок скорочено до «Посуха всієї області, на півночі трохи частіше», бо довший не влізав у 30 pt."
+ ],
+ "handoff": [
+  "T13: змінюй тексти лише у списку SLIDES у src/slides_draft.py (ключі title, bullets, figure, note; слайд 4 має columns замість bullets). Числа вже зібрані змінними вгорі (n_conf, one_in, worst, rayon(), y2020, y2021) і форматуються fmt(x, digits) з комою і «−».",
+  "Макет: слайд 1 — широкий рисунок зверху, текст під ним; слайди 2-3 — текст ліворуч, рисунок праворуч; слайд 4 — два стовпчики. Основний текст 20 pt, до 5 рядків на слайд.",
+  "PNG зменшуються в пам'яті до 2000 px (MAX_PX); figures/ не змінювалось."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.slides_draft",
+  "ls -l slides/presentation_draft.pdf",
+  "python3 orchestration/validate.py T12"
+ ]
+}
