@@ -1,0 +1,50 @@
+{
+  "task_id": "T14",
+  "status": "done",
+  "summary": "Написано docs/methodology.md і зібрано methodology.pdf (3 сторінки A4, LibreOffice) скриптом src/build_methodology.py. Скрипт перед збиранням звіряє 57 параметрів і чисел тексту з src/config.py, summary.json, causes.json і yields.csv і не збирає PDF при розбіжності. Розділи: дані і джерела, PDSI, сезон, поріг, категорії, перевірки, причини, урожайність пшениці (7 років, середня −16,51 %, без 2022 −15,21 %), 6 обмежень, джерела до слайда 4, відтворення. Три твердження сесії 1 звірено з першоджерелами: Palmer 1965 табл. 11 (−2,00…−2,99 = Moderate drought), Постанова ВРУ № 807-IX п. 1 пп. 14 (4 райони Миколаївської області), квітень–вересень приблизно відповідає періоду T > 10 °C (19–21.04 до 12–21.10, Кирнасівська, Шулякова 2020). PDF відрендерено і переглянуто посторінково: кирилиця, таблиці з рамками, 13 клікабельних посилань.",
+  "files": [
+    {"path": "docs/methodology.md", "purpose": "Текст методології (джерело для PDF), числа з даних з точністю за shared.precision"},
+    {"path": "methodology.pdf", "purpose": "Методологія для науковців УкрГМІ, 3 сторінки A4, зібрана з markdown через LibreOffice"},
+    {"path": "src/build_methodology.py", "purpose": "Звірка чисел тексту з config.py і data/processed, markdown → HTML → PDF (soffice --headless)"}
+  ],
+  "checks": [
+    {"criterion_id": "A1", "passed": true, "evidence": "build_methodology.expected_strings() бере параметри з src/config.py і шукає їх у тексті: SEASON_MONTHS = [4, 5, 6, 7, 8, 9], SEASON_LABEL «квітень–вересень», DROUGHT_THRESHOLD_PDSI = -2.0, NORMAL_PERIOD 1991–2020, COMPARE_PERIODS 1958–1990 і 1991–2025, BBOX 29,8–33,6 і 46,0–48,5. Вивід: «Звірка: 57 чисел і параметрів збігаються з даними.» Класи PDSI у тексті збігаються з PDSI_CLASSES (incipient drought Палмера в нас віднесено до норми > −1,0, це сказано явно)."},
+    {"criterion_id": "A2", "passed": true, "evidence": "methodology.pdf, розділ 7 «Обмеження» (с. 2–3): (1) ґрунт і PDSI з однієї моделі, 9 із 17 лише на ґрунті, 2 з 33 проти 6 з 35 (summary.json confirmed_by.ґрунт = 9 років, periods.*.drought_years_confirmed_by_ppt = 2 і 6); (2) модельні дані на сітці 1/30° ≈3,7 × 2,5 км, не станції; (3) OSM-контур включає акваторію, 25 300 проти 24 598 км², 75 клітинок води виключено; (4) інерційність PDSI з цитатою Palmer 1965 с. 28; плюс (5) частота по районах за індексом проти підтвердженої по клітинці (6,03 проти 3,85 в.п., causes.json rayons_frequency) і (6) обмеження урожайності. Перевірено переглядом PNG-рендеру кожної сторінки."},
+    {"criterion_id": "A3", "passed": true, "evidence": "Функції fmt/fmt_pdsi у src/build_methodology.py форматують точні значення з файлів (2 знаки; PDSI у межах ±0,1 від −2 з 3 знаками) і перевіряють їх наявність у тексті: 3,24; 4,00; 15,15 %, 1 із 6,60; 45,71 %, 1 із 2,19; 12,12 %, 1 із 8,25; 37,14 %, 1 із 2,69; −6,34/−5,92/−5,73/−4,20/−4,11; −13,84 %; −29,76 %; 1989 −2,066; 2015 −2,031; 2013 −1,993; 1995 −1,954; втрати −0,34/−41,88/+2,05/−17,31/−3,80/−29,96/−24,35; −16,51 % (n = 7); −15,21 % (n = 6). Аномалій опадів чи ґрунту в межах ±2 в.п. від −20 % немає (перевірено по drought_years.csv). Негативний тест: підміна −16,51→−16,5 і −6,34→−6,3 дає 2 помилки звірки."}
+  ],
+  "facts": [
+    {"claim": "Palmer (1965), Meteorological Drought, Research Paper No. 45, U.S. Weather Bureau, Feb 1965, табл. 11 «Classes for wet and dry periods» (с. 28): −2.00 to −2.99 = Moderate drought; −3.00 to −3.99 = Severe drought; ≤ −4.00 = Extreme drought; −1.00 to −1.99 = Mild drought; −.50 to −.99 = Incipient drought", "source": "https://www.ncei.noaa.gov/monitoring-content/temp-and-precip/drought/docs/palmer.pdf (скан, с. 28 = сторінка PDF 34, переглянуто як зображення)", "verified": true},
+    {"claim": "Palmer (1965, с. 28): за нормальної погоди індекс X зменшується з −1.10 до −0.52 за 7 місяців і наближається до нуля приблизно за 3 роки (інерційність PDSI)", "source": "https://www.ncei.noaa.gov/monitoring-content/temp-and-precip/drought/docs/palmer.pdf, с. 28", "verified": true},
+    {"claim": "Постанова ВРУ «Про утворення та ліквідацію районів» від 17.07.2020 № 807-IX, п. 1 пп. 14: у Миколаївській області утворено Баштанський (центр Баштанка), Вознесенський (Вознесенськ), Миколаївський (Миколаїв), Первомайський (Первомайськ) райони", "source": "https://zakon.rada.gov.ua/laws/show/807-20/print (текст отримано curl, розібрано)", "verified": true},
+    {"claim": "Дати переходу середньої температури повітря через 10 °C (весна–осінь): Первомайськ 20.04–12.10 (174 дні), Миколаїв 19.04–17.10 (180), Очаків 21.04–21.10 (182); автори аналізують запаси вологи під кукурудзою з квітня по вересень. Тобто квітень–вересень приблизно відповідає періоду активної вегетації, але не охоплює першу половину жовтня", "source": "Кирнасівська Н. В., Шулякова І. Г. Агрокліматична оцінка клімату ґрунтів Північного Причорномор'я на прикладі кукурудзи. Укр. гідрометеорол. журн., 2020, 26: 68–77, табл. 1, doi:10.31481/uhmj.26.2020.06 (https://uhmj.org.ua/index.php/journal/article/download/156/153)", "verified": true},
+    {"claim": "TerraClimate: Abatzoglou et al. 2018, Scientific Data 5:170191, doi:10.1038/sdata.2017.191; у документації 1/24°", "source": "https://doi.org/10.1038/sdata.2017.191 (сторінка nature.com і climatologylab.org у цій задачі не відкрились: 303 на авторизацію і 403)", "verified": false},
+    {"claim": "Крок сітки на сервері 1/30°, 2651 клітинка суші, 75 клітинок води виключено; площа OSM-контуру 25 300 км² проти офіційних 24 598", "source": "orchestration/results/T04.json, T05.json, T03.json", "verified": false},
+    {"claim": "Усі числа результатів у методології", "source": "data/processed/summary.json, causes.json, yields.csv, drought_years.csv; звірка src/build_methodology.py", "verified": true},
+    {"claim": "Факти до слайда 4 (агрострахування 60/45 %, строки заявок, 94 % систем Херсонщини після Каховки, водогін Миколаєва, 501 га розмінування) взято з затверджених нотаток; самі джерела в цій задачі не відкривались (їх звіряє T13)", "source": "orchestration/notes/slide4_approved.md", "verified": false}
+  ],
+  "issues": [
+    "requirements.txt не змінено (паралельно T13): Supervisor має додати markdown==3.11.3 (встановлено в .venv). Для збирання PDF також потрібен LibreOffice (soffice у PATH), це не pip-залежність.",
+    "Квітень–вересень лише приблизно збігається з агрокліматичним періодом T > 10 °C (19–21.04 до 12–21.10 у Миколаївській області): жовтень і березневе відновлення вегетації озимих не входять. У методології це сказано прямо; config.py не змінювався.",
+    "Палмер виділяє клас «incipient drought» (−0,50…−0,99), який у PDSI_CLASSES віднесено до «normal» (> −1,0). На результат не впливає (поріг −2), у методології зазначено.",
+    "docs/yields.md пише базу 2014 як «32,93»; точне значення у yields.csv 32.925 (float 32.92499…), f-форматування дає 32,92. У методології подано 32,925 (3 знаки), щоб уникнути неоднозначності округлення.",
+    "Першоджерело TerraClimate (nature.com, climatologylab.org) у цій задачі не відкрилось (303/403), тому цитата про 1/24° і модель водного балансу спирається на попередні задачі і docs/causes.md."
+  ],
+  "handoff": [
+    "Перезбирання PDF: .venv/bin/python -m src.build_methodology (з кореня). Скрипт спершу звіряє 57 чисел/параметрів тексту з config.py і data/processed і завершується з кодом 1, якщо щось розійшлось; тоді треба оновити docs/methodology.md.",
+    "Потрібен пакет markdown==3.11.3 (додати в requirements.txt) і LibreOffice; конвертація: soffice --headless --infilter='HTML (StarWriter)' --convert-to pdf:writer_pdf_Export у тимчасовій теці.",
+    "methodology.pdf: 3 сторінки A4, 13 клікабельних посилань, таблиці з рамками (атрибути HTML, бо CSS-рамки LibreOffice ігнорує).",
+    "Звірені твердження для prompts.md (поле статусу оновлює Supervisor): Palmer 1965 табл. 11 с. 28 — ✅; Постанова 807-IX п. 1 пп. 14 — ✅; квітень–вересень — ✅ з застереженням (T > 10 °C з 19–21.04 до 12–21.10, Кирнасівська, Шулякова 2020)."
+  ],
+  "commands_run": [
+    "curl -sL -A 'Mozilla/5.0' https://zakon.rada.gov.ua/laws/show/807-20/print (і /807-IX), розбір HTML python3 -I",
+    "WebFetch https://www.ncei.noaa.gov/monitoring-content/temp-and-precip/drought/docs/palmer.pdf; swift pdfrender.swift <palmer.pdf> scratchpad/palmer_pages (перегляд с. 1 і 34)",
+    "WebSearch агрокліматичний період Миколаївська область; WebFetch https://uhmj.org.ua/index.php/journal/article/download/156/153; .venv/bin/python -I (pypdf) витяг табл. 1",
+    "WebFetch climatologylab.org/terraclimate.html (403), nature.com/articles/sdata2017191 (303), pmc (сторінка перевірки)",
+    ".venv/bin/pip install markdown",
+    ".venv/bin/python -m src.build_methodology",
+    "swift pdfrender.swift methodology.pdf scratchpad/t14 (3 сторінки, перегляд кожної)",
+    ".venv/bin/python -I -c (pypdf: список посилань у PDF)",
+    ".venv/bin/python -c (негативний тест check_numbers)",
+    "python3 orchestration/validate.py T14"
+  ]
+}
