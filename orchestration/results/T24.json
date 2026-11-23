@@ -1,0 +1,41 @@
+{
+ "task_id": "T24",
+ "status": "done",
+ "summary": "Відсотки на рисунках, у чернетці слайдів і в трьох документах переведено з 1 на 2 знаки, числа взято з summary.json, causes.json, drought_years.csv і yields.csv (не дописано нулі). Змінено fig3 (підписи районів, легенда) і слайд 3; fig1, fig2, fig4 і слайд урожайності відсотків не містять, тож їхній код не змінювався. data/processed/* не змінились (md5 до і після однакові).",
+ "files": [
+  {"path": "src/fig_frequency.py", "purpose": "підписи районів fmt(pct, 2), легенда 25,00 і 50,00 %, коментарі", "committed": false},
+  {"path": "src/slides_draft.py", "purpose": "відсотки районів на слайді 3 з 2 знаками", "committed": false},
+  {"path": "docs/sanity_check.md", "purpose": "усі відсотки на 2 знаки з файлів даних", "committed": false},
+  {"path": "docs/causes.md", "purpose": "відсотки на 2 знаки з causes.json", "committed": false},
+  {"path": "docs/yields.md", "purpose": "втрати врожаю на 2 знаки з yields.csv", "committed": false},
+  {"path": "figures/fig3_frequency.png", "purpose": "перегенеровано", "committed": false},
+  {"path": "figures/fig1_timeline.png", "purpose": "перезапуск без змін вигляду", "committed": false},
+  {"path": "figures/fig2_maps.png", "purpose": "перезапуск без змін вигляду", "committed": false},
+  {"path": "figures/fig4_causes.png", "purpose": "перезапуск без змін вигляду", "committed": false},
+  {"path": "slides/presentation_draft.pdf", "purpose": "перезібрано", "committed": false}
+ ],
+ "checks": [
+  {"criterion_id": "A1", "passed": true, "evidence": "grep [0-9],[0-9] ?% у docs: лишились лише 2-знакові; у src немає форматів відсотка з 1 знаком (fig_timeline, causes.py fig4, fig_maps відсотків не виводять: мм, °C, PDSI). Біля порогу значень з 3 знаками у відсотках не було потрібно (найближче 2024 ґрунт −17,85, 2,15 в.п. від порогу)."},
+  {"criterion_id": "A2", "passed": true, "evidence": "35,2→35,18 (35.17717930545712), 33,4→33,40, 30,7→30,75, 29,1→29,15; опади −11,4→−11,36 % і +12,8→+12,76 % (causes.json); підтверджені роки −17,9→−17,94 %; втрата 2020 −36,2→−36,17 % (yields.csv); 2008 опади +25,9→+25,94 %."},
+  {"criterion_id": "A3", "passed": true, "evidence": "md5 -r data/processed/* до і після запуску src.fig_frequency, fig_maps, fig_timeline, causes, slides_draft ідентичні (causes.csv і causes.json теж). Переглянуто fig3 і слайд 3: довші підписи (35,18 % років) вміщаються, не налазять на межі."}
+ ],
+ "facts": [],
+ "issues": [
+  "docs/yields.md: числа переформатовано з yields.csv, змістовний текст не міняв (окрема задача Supervisor'а). Середнє без 2022: −25,18 %.",
+  "fig2, fig4 і слайд урожайності не мають відсотків, їх візуально не змінено; перегенеровані лише для узгодженості."
+ ],
+ "handoff": [
+  "Відсотки показуються з 2 знаками: у src.fig_frequency.fmt(x, 2), у src.slides_draft.fmt(x, 2). Мінус у docs для змінених відсотків справжній «−».",
+  "Підписи fig3: «1 рік із 2,84 (35,18 % років)». Легенда: 0 %, 25,00 % = 1 рік із 4, 50,00 % = 1 рік із 2."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.fig_frequency",
+  ".venv/bin/python -m src.fig_maps",
+  ".venv/bin/python -m src.fig_timeline",
+  ".venv/bin/python -m src.causes",
+  ".venv/bin/python -m src.slides_draft",
+  "swift pdfrender.swift slides/presentation_draft.pdf t24/",
+  "md5 -r data/processed/* (до і після)",
+  "python3 orchestration/validate.py T24"
+ ]
+}

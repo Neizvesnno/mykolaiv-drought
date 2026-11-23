@@ -1,0 +1,59 @@
+{
+  "id": "T24",
+  "day": "2026-11-23",
+  "role": "viz",
+  "title": "Відсотки з 2 знаками на рисунках, у документах і чернетці слайдів",
+  "depends_on": [
+    "T19",
+    "T20",
+    "T23"
+  ],
+  "inputs": [
+    "orchestration/WORKER.md",
+    "src/fig_frequency.py",
+    "src/fig_maps.py",
+    "src/fig_timeline.py",
+    "src/causes.py",
+    "src/slides_draft.py",
+    "docs/sanity_check.md",
+    "docs/causes.md",
+    "docs/yields.md",
+    "data/processed/summary.json",
+    "data/processed/causes.json",
+    "data/processed/yields.csv"
+  ],
+  "instructions": "Рішення Павла (23.11, до промпту 4.2): відсотки показуються людині з 2 знаками після коми замість 1, бо інакше можна пропустити локальні й слабкі посухи, а похибка у фінальних значеннях виросте. Правило вже оновлено в WORKER.md і state.json → shared.precision. Знайди всі місця, де відсоток, аномалія у % або частка у % форматується з 1 знаком (наприклад f'{x:.1f}', fmt(x, 1), «35,2 %», «25,0 %», «−11,4 %»), і перейди на 2 знаки: у src/fig_frequency.py (підписи районів і легенда «0 %», «25,00 % = 1 рік із 4», «50,00 % = 1 рік із 2»), src/fig_timeline.py, src/causes.py (fig4, якщо там є %), src/slides_draft.py, а також у docs/sanity_check.md, docs/causes.md, docs/yields.md. Числа в документах бери з файлів даних (summary.json, causes.json, yields.csv, drought_years.csv), а не дописуй нуль до старого 1-знакового числа: 35,2 % має стати точним округленням, наприклад 35,22 %, а не 35,20 %. Біля порогу (аномалія ±2 в.п. від −20 %) лишаються 3 знаки. PDSI (2 знаки), «1 рік із N» (2 знаки), мм, °C і ц/га не змінюй. Кома як десятковий роздільник, справжній мінус «−». Перезапусти src.fig_frequency, src.fig_maps, src.fig_timeline, src.causes (лише рисунок, дані він перерахує однаково — перевір md5 causes.csv до і після) і src.slides_draft. Переглянь кожен PNG і сторінки чернетки (рендер у scratchpad /private/tmp/claude-501/-Users-lucky777strike-Desktop-work-test-case/78833e3c-761a-4635-9d1d-461d124ec454/scratchpad/t24/; там є pdfrender.swift: swift pdfrender.swift <pdf> <outdir>): довші підписи не мають налазити на межі, інші підписи чи виходити за рисунок. Слайд урожайності поки не переписуй змістовно (це окрема задача), лише формат %. Не чіпай data/processed/*, prompts.md, state.json, src/yields.py.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "Жодного відсотка з 1 знаком на рисунках, у чернетці слайдів і в docs/sanity_check.md, docs/causes.md, docs/yields.md (крім 3 знаків біля порогу)",
+      "how": "grep форматів у src і docs; Supervisor читає текст сторінок PDF і переглядає PNG"
+    },
+    {
+      "id": "A2",
+      "check": "Показані числа — округлення точних значень з файлів даних (напр. частки районів з summary.json, −11,36 % чи інше з causes.json)",
+      "how": "Supervisor перераховує 5–10 чисел з файлів даних"
+    },
+    {
+      "id": "A3",
+      "check": "Файли даних не змінились, підписи на рисунках не перекриваються",
+      "how": "git diff --stat data/processed; перегляд PNG"
+    }
+  ],
+  "outputs": [
+    "src/fig_frequency.py",
+    "src/fig_timeline.py",
+    "src/causes.py",
+    "src/slides_draft.py",
+    "docs/sanity_check.md",
+    "docs/causes.md",
+    "docs/yields.md",
+    "figures/fig1_timeline.png",
+    "figures/fig2_maps.png",
+    "figures/fig3_frequency.png",
+    "figures/fig4_causes.png",
+    "slides/presentation_draft.pdf"
+  ],
+  "fallback": "Якщо довший підпис не вміщається — зменш шрифт на 1–2 pt або зсунь підпис, але не повертай 1 знак; якщо й так не виходить — напиши в issues.",
+  "max_attempts": 2
+}

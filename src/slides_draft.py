@@ -58,10 +58,19 @@ ray_sorted = sorted(ray.items(), key=lambda kv: -kv[1]["mean_frequency_pct"])
 
 def rayon(name):
     key = next(k for k in ray if k.startswith(name))
-    return fmt(ray[key]["mean_frequency_pct"], 1)
+    return fmt(ray[key]["mean_frequency_pct"], 2)
 
 
-y2020, y2021 = Y.loc[2020, "yield_c_ha"], Y.loc[2021, "yield_c_ha"]
+
+
+def yield_fact(year):
+    """Рядок факту: ц/га і втрата в дужках (з yields.csv; округлення лише тут)."""
+    r = Y.loc[year]
+    return f"{year} — {fmt(r['yield_c_ha'], 1)} ц/га ({fmt(r['loss_pct'], 2)} %)"
+
+
+# роки, для яких у yields.csv є втрата (підтверджена посуха з базою)
+YIELD_FACT_YEARS = [int(y) for y in Y.index[Y["loss_pct"].notna()]]
 
 # --- чорнові тексти: по одному словнику на слайд ---
 SLIDES = [
@@ -104,8 +113,8 @@ SLIDES = [
         "columns": [
             ("Ризики", [
                 f"Підтверджена посуха: 1 рік із {one_in}",
-                f"2020 — {fmt(y2020, 1)} ц/га пшениці",
-                f"2021 — {fmt(y2021, 1)} ц/га (Держстат)",
+                "Пшениця (проти несухих років):",
+                *[yield_fact(y) for y in YIELD_FACT_YEARS],
             ]),
             ("Що з цим робити", [
                 "Враховувати частоту посух у планах",
