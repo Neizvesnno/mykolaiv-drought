@@ -14,16 +14,28 @@
   "skills": [
     "humanizer:humanizer"
   ],
-  "instructions": "Перетворити prompts.md на PDF. Промпти дослівно — їх НЕ редагувати; редагувати лише власні пояснення. Заповнити зведення з state.json і results/.",
+  "instructions": "Перетворити prompts.md на prompts.pdf скриптом src/build_prompts_pdf.py (запуск .venv/bin/python -m src.build_prompts_pdf), тим самим підходом, що src/build_methodology.py: markdown → HTML з CSS (таблиці з рамками, блоки коду з переносом рядків, кирилиця) → LibreOffice soffice --headless --convert-to pdf; HTML-коментарі (шаблон запису) у PDF не потрапляють. prompts.md НЕ редагуй узагалі: промпти Павла дослівні, а розділи 3 «Зведення» і 7 «Висновки» Павло заповнить сам пізніше (його рішення 23.11: «Зведення і висновки зробимо пізніше») — PDF перезбиратиметься тим самим скриптом. Натомість підготуй для Павла чернетку чисел для розділу 3 у docs/prompts_summary_draft.md: кількість сесій, промптів Павла (за заголовками «#### Промпт»), задач воркерів (state.json, статуси), тверджень AI у таблицях перевірки з ✅/⚠️/❌, помилок AI у розділі 6 — кожне число з поясненням, як пораховано (командою), щоб Павло міг перевірити. Відрендер PDF (swift /private/tmp/claude-501/-Users-lucky777strike-Desktop-work-test-case/78833e3c-761a-4635-9d1d-461d124ec454/scratchpad/pdfrender.swift <pdf> <outdir>, вихід у scratchpad/t15/) і перевір: довгі промпти і таблиці не обрізані по краю, кирилиця, посилання. Не чіпай README.md і src/run_all.py (їх паралельно пише T16), prompts.md, slides/, methodology.",
   "acceptance": [
     {
       "id": "A1",
-      "check": "Промпти збігаються з orchestration/prompts/ дослівно",
-      "how": "diff з orchestration/prompts/"
+      "check": "Текст промптів у PDF дослівно збігається з prompts.md (жодного редагування)",
+      "how": "Supervisor порівнює текст PDF з prompts.md вибірково для 5 промптів і git diff prompts.md порожній"
+    },
+    {
+      "id": "A2",
+      "check": "Довгі рядки, таблиці й блоки коду не обрізані, HTML-коментарі не видно",
+      "how": "рендер усіх сторінок"
+    },
+    {
+      "id": "A3",
+      "check": "Числа в чернетці зведення пораховано відтворюваною командою",
+      "how": "Supervisor повторює команди"
     }
   ],
   "outputs": [
-    "prompts.pdf"
+    "src/build_prompts_pdf.py",
+    "prompts.pdf",
+    "docs/prompts_summary_draft.md"
   ],
   "max_attempts": 2
 }

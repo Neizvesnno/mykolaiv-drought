@@ -1,0 +1,51 @@
+{
+ "task_id": "T16",
+ "status": "done",
+ "summary": "Написано README.md (висновки з числами, 3 команди відтворення, 3 посилання на PDF, передумови, структура, роль AI, джерела) і src/run_all.py (15 кроків ланцюжка, зупинка на першій помилці, build_prompts_pdf лише якщо файл існує). Прогін на кешах з --skip check_env: код 0, 83,3 с, мережевих завантажень немає; md5 summary.json і yields.csv не змінились.",
+ "files": [
+  {
+   "path": "README.md",
+   "purpose": "README українською для лабораторії",
+   "committed": true
+  },
+  {
+   "path": "src/run_all.py",
+   "purpose": "запуск усього ланцюжка одним модулем",
+   "committed": true
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "run_all --skip check_env: rc=0, 83,3 с (yield_tables 36,0 с, решта до 2,3 с); download і download_yields лише 'пропускаю'; md5 summary.json 096ea6dfc3b5aa77ceff727bcb22ddf5 і yields.csv 4a8440825ea9ac342d345d21cde2e434 до і після однакові. check_env не запускався, бо відкриває метадані THREDDS по мережі."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "README: 17 із 68 (1 з 4,00), 4 з 33 проти 13 з 35, +1,92 °C, -11,36 %, 70,48 %, пшениця -41,88 %/-29,96 %/-16,51 % (з summary.json, causes.json, yields.csv, slide_texts.md); 3 команди; 3 PDF; передумови; 2 речення про роль AI."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "Числа в README збігаються з файлами даних",
+   "source": "data/processed/summary.json, causes.json, yields.csv; docs/slide_texts.md",
+   "verified": true
+  }
+ ],
+ "issues": [
+  "check_env у run_all звертається до THREDDS по мережі (лише метадані), тож на кешах без мережі він упаде; перевірено з --skip check_env.",
+  "Під час прогону з'явилися src/build_prompts_pdf.py і prompts.pdf (T15), крок їх зібрав.",
+  "Прогін перезаписав рисунки, slides/presentation.*, methodology.pdf, prompts.pdf, docs/slide_texts.md (вміст той самий за змістом).",
+  "Умови використання TerraClimate і Держстату не перевірялись, у README ліцензій для них не вказано, лише ODbL для OSM (з методології).",
+  "yield_tables займає 36 с (розбір PDF), це більша частина часу."
+ ],
+ "handoff": [
+  "Запуск: .venv/bin/python -m src.run_all [--skip крок ...] [--list]; файлові кроки: check_env, download, boundaries, rivers, season, drought_years, решта модулем."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.run_all --skip check_env",
+  "md5 data/processed/summary.json data/processed/yields.csv",
+  "python3 orchestration/validate.py T16"
+ ]
+}

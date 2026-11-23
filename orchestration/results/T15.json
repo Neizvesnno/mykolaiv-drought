@@ -1,0 +1,58 @@
+{
+  "task_id": "T15",
+  "status": "done",
+  "summary": "prompts.pdf (11 сторінок A4) збирається скриптом src/build_prompts_pdf.py з prompts.md (markdown → HTML з CSS → soffice --headless), prompts.md не змінено (cmp з копією до роботи). HTML-коментар із шаблоном прибирається до markdown. Чернетка чисел для розділу 3 лежить у docs/prompts_summary_draft.md: 4 сесії, 15 промптів, 27 задач воркерів (23 done, 2 in_progress, 2 pending на момент запису), 39 рядків перевірки (30 лише ✅, 4 лише ⚠️, 3 ✅+⚠️, 1 ❌+✅, 1 ➖), 10 заповнених помилок AI у розділі 6; кожне число з командою.",
+  "files": [
+    {
+      "path": "src/build_prompts_pdf.py",
+      "purpose": "markdown → HTML → PDF через LibreOffice; прибирає HTML-коментарі, блоки коду з переносом рядків, кольорові замінники емодзі"
+    },
+    {
+      "path": "prompts.pdf",
+      "purpose": "PDF із текстом промптів, 11 сторінок A4"
+    },
+    {
+      "path": "docs/prompts_summary_draft.md",
+      "purpose": "Чернетка чисел для розділу 3 prompts.md з командами відтворення"
+    }
+  ],
+  "checks": [
+    {
+      "criterion_id": "A1",
+      "passed": true,
+      "evidence": "Усі 14 блоків коду (дослівні промпти) з prompts.md знайдено в тексті PDF (порівняння без пробілів і переносів, 0 відсутніх); cmp prompts.md з копією до початку роботи: однаковий. Репозиторій не під git у цьому каталозі, тому git diff не застосовний."
+    },
+    {
+      "criterion_id": "A2",
+      "passed": true,
+      "evidence": "Відрендерено всі 11 сторінок (swift pdfrender, scratchpad/t15/p1..p11.png), переглянуто сторінки 1-3, 7, 10, 11 повністю: довгі промпти переносяться, таблиці в межах поля, кирилиця читається, слова ШАБЛОН і '<!--' у тексті PDF відсутні."
+    },
+    {
+      "criterion_id": "A3",
+      "passed": true,
+      "evidence": "Числа в docs/prompts_summary_draft.md порахував командами, що там наведені (python3 з regex по prompts.md без коментарів і state.json): сесій 4, промптів 15, задач 27, рядків перевірки 39, значків 43, помилок 10 із 11 рядків."
+    }
+  ],
+  "facts": [
+    {
+      "claim": "4 сесії, 15 промптів, 39 рядків перевірки у prompts.md станом на 23.11.2026",
+      "source": "docs/prompts_summary_draft.md, команди 1-5",
+      "verified": true
+    }
+  ],
+  "handoff": [
+    "Перезбирання PDF: .venv/bin/python -m src.build_prompts_pdf (з кореня). Скрипт нічого не звіряє, лише перетворює prompts.md; Павло заповнить розділи 3 і 7, потім перезбере.",
+    "У PDF кольорові емодзі ✅ ❌ ➖ ⏳ замінено однотонними ✔ ✘ – ○ (LibreOffice малює їх порожніми); ⚠ лишився. Сам prompts.md не змінено.",
+    "Якщо soffice уже зайнятий іншим процесом (паралельна збірка іншого PDF), запуск може зависнути на кілька хвилин: запускати збірки послідовно.",
+    "У чернетці зведення число 'у роботі/чекають' зміниться після T15-T18; промпти 15, сесій 4 зміняться лише якщо додати записи."
+  ],
+  "issues": [
+    "Частку коду, написаного Павлом, і розбивку промптів за категоріями командою порахувати не можна: у чернетці це позначено, число не вигадано."
+  ],
+  "commands_run": [
+    ".venv/bin/python -m src.build_prompts_pdf",
+    "swift pdfrender.swift prompts.pdf scratchpad/t15",
+    "cmp prompts.md scratchpad/prompts_before.md",
+    "python3 (regex-підрахунки з docs/prompts_summary_draft.md)"
+  ]
+}
