@@ -5,6 +5,8 @@ TerraClimate для 4 років із найнижчим середнім PDSI �
 (summary.json -> worst_years), з межами районів і райцентрами.
 Звідки дані: data/processed/season_cells.nc (pdsi, land_mask),
 data/processed/summary.json, data/boundaries/mykolaiv_rayons.geojson.
+Ріки й лимани: data/boundaries/mykolaiv_rivers.geojson, mykolaiv_water.geojson
+(шляхи — константи RIVERS_FILE, WATER_FILE у src/rivers.py).
 Вихід: figures/fig2_maps.png (300 dpi).
 Запуск з кореня репозиторію: .venv/bin/python -m src.fig_maps
 """
@@ -21,9 +23,10 @@ import numpy as np
 import xarray as xr
 from matplotlib.colors import TwoSlopeNorm
 from shapely.geometry import Point, box
-from shapely.ops import unary_union
+from shapely.ops import nearest_points, unary_union
 
 from src.config import BOUNDARIES_DIR, FIGURES_DIR, PROCESSED_DIR
+from src.rivers import RIVERS_FILE, WATER_FILE
 
 N_PANELS = 4
 VMIN, VCENTER, VMAX = -7.0, 0.0, 4.0
@@ -35,8 +38,22 @@ COLORBAR_TICKS = [-7, -4, -2, 0, 2, 4]
 CBAR_LABEL = ("індекс посухи Палмера (PDSI):\n"
               "нижче −2 — посуха, нижче −4 — екстремальна")
 TITLE = "Найсухіші сезони: посуха накрила всю область"
-SOURCE = "Дані: TerraClimate (1958–2025), межі © OpenStreetMap contributors"
-RAYON_COLOR = "white"   # білі лінії читаються і на темному, і на світлому фоні
+SOURCE = "Дані: TerraClimate (1958–2025), межі й ріки © OpenStreetMap contributors"
+RAYON_COLOR = "black"   # межі районів чорні (рішення 23.11)
+RAYON_HALO = "white"    # тонкий білий ореол, щоб чорна лінія була видна на темно-коричневому
+RAYON_LW = 1.3
+HALO_LW = 3.0
+WATER_COLOR = "#0072B2"  # ріки й лимани (палітра Окабе-Іто, безпечна для дальтоніків)
+RIVER_LW = 1.4
+RIVER_LABEL_FONT = 12
+# Підписуємо лише головні ріки: орієнтовна точка (довгота, широта), де нема
+# інших підписів; підпис ставиться в найближчій до неї точці лінії ріки.
+# Далі зсув у точках і вирівнювання. Мертвовод і Висунь без підписів.
+RIVER_LABELS = {
+    "Південний Буг": ((31.90, 46.74), (-10, 0), "right"),
+    "Інгул": ((32.36, 47.85), (-8, 0), "right"),
+    "Інгулець": ((32.82, 47.70), (8, 0), "left"),
+}
 MARGIN = 0.05           # запас навколо суходолу, градуси
 # Райцентри: координати перевіряються на належність своєму району.
 CITIES = [
@@ -88,6 +105,43 @@ def check_cities(rayons):
     return res
 
 
+def load_water(land, rayons):
+    """Ріки (обрізані по суходолу) і лимани (обрізані по контуру області).
+
+    Лимани обрізаємо по об'єднанню районів, а не по суходолу: клітинки води
+    у land_mask замасковані, тож по суходолу лиман зник би повністю.
+    """
+    oblast = rayons.geometry.union_all()
+    rivers = gpd.read_file(RIVERS_FILE)
+    rivers["geometry"] = rivers.geometry.intersection(land)
+    water = gpd.read_file(WATER_FILE)
+    water["geometry"] = water.geometry.intersection(oblast)
+    return rivers, water
+
+
+def draw_water(ax, rivers, water, labels=True):
+    """Лимани заливкою, ріки лініями одного синього; підпис головних рік."""
+    water.plot(ax=ax, color=WATER_COLOR, edgecolor=WATER_COLOR, linewidth=0.5)
+    rivers.plot(ax=ax, color=WATER_COLOR, linewidth=RIVER_LW)
+    if not labels:
+        return
+    halo = [pe.withStroke(linewidth=3, foreground="white")]
+    for name, (target, offset, ha) in RIVER_LABELS.items():
+        geom = rivers.loc[rivers["name"] == name, "geometry"].iloc[0]
+        # nearest_points: точка лінії, найближча до заданої цільової точки.
+        pt = nearest_points(geom, Point(target))[0]
+        ax.annotate(name, (pt.x, pt.y), xytext=offset, textcoords="offset points",
+                    fontsize=RIVER_LABEL_FONT, color=WATER_COLOR, style="italic",
+                    fontweight="bold", ha=ha, va="center", path_effects=halo)
+
+
+def draw_rayon_borders(ax, geoms):
+    """Чорні межі районів із тонким білим ореолом під лінією."""
+    geoms.boundary.plot(ax=ax, color=RAYON_COLOR, linewidth=RAYON_LW,
+                        path_effects=[pe.withStroke(linewidth=HALO_LW,
+                                                    foreground=RAYON_HALO)])
+
+
 def make_maps():
     ds = xr.open_dataset(PROCESSED_DIR / "season_cells.nc")
     summary = json.loads((PROCESSED_DIR / "summary.json").read_text())
@@ -100,6 +154,7 @@ def make_maps():
     # Межі обрізаємо по суходолу, щоб лінії не йшли по лиману.
     clipped = rayons.copy()
     clipped["geometry"] = rayons.geometry.intersection(land)
+    rivers, water = load_water(land, rayons)
     checks = check_cities(rayons)
     print("Райцентри:", checks)
 
@@ -116,7 +171,8 @@ def make_maps():
         z = np.ma.masked_where(mask != 1, z)
         mesh = ax.pcolormesh(x_edges, y_edges, z, cmap=CMAP, norm=norm,
                              shading="flat")
-        clipped.boundary.plot(ax=ax, color=RAYON_COLOR, linewidth=1.5)
+        draw_rayon_borders(ax, clipped)
+        draw_water(ax, rivers, water)
         gpd.GeoSeries([land]).boundary.plot(ax=ax, color="black", linewidth=1.2)
         for name, x, y, _ in CITIES:
             ax.plot(x, y, "o", color="black", markersize=5,

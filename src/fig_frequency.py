@@ -1,18 +1,20 @@
-"""Рисунок 3: карта частоти посух по Миколаївській області.
+"""Рисунок 3: частота посух по 4 районах Миколаївської області (спрощена карта).
 
-Що робить: малює, у якій частці років (1958–2025) кожна клітинка сітки
-TerraClimate була в посусі (PDSI <= -2), і підписує середню частоту по 4 районах.
-Звідки дані: data/processed/drought_frequency.nc (змінні drought_frequency,
-land_mask), data/processed/summary.json (spatial.rayons),
-data/boundaries/mykolaiv_rayons.geojson (межі © OpenStreetMap contributors).
+Що робить: заливає кожен район одним кольором (YlOrBr, 4 відтінки: чим
+частіша посуха, тим темніше) і підписує район: назва, «1 рік із N»
+(N = 100 / частка) та частку років із посухою. Метрика та сама, що раніше:
+частота за індексом, PDSI <= -2 (summary.json -> spatial.rayons.*.mean_frequency_pct).
+Клітинкової сітки немає: просторову деталь показує fig2.
+Звідки дані: data/processed/summary.json, data/processed/season_cells.nc
+(лише land_mask для контуру суходолу), data/boundaries/mykolaiv_rayons.geojson,
+ріки й лимани: data/boundaries/mykolaiv_rivers.geojson, mykolaiv_water.geojson
+(шляхи — константи у src/rivers.py), усе © OpenStreetMap contributors.
 Як запустити з кореня репозиторію:  .venv/bin/python -m src.fig_frequency
 Результат: figures/fig3_frequency.png (300 dpi).
-
-Чесність шкали: значення лише 26–37 %, тому шкала дискретна 0–50 % кроком 5 %.
-Якщо її розтягнути на 26–37 %, різниця в 6 в.п. виглядала б драматично.
 """
 
 import json
+from math import cos, radians
 
 import geopandas as gpd
 import matplotlib
@@ -20,44 +22,32 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
-import numpy as np
 import xarray as xr
-from matplotlib.colors import BoundaryNorm
-from shapely.geometry import box
-from shapely.ops import unary_union
+from matplotlib.colors import Normalize
 
 from src.config import BOUNDARIES_DIR, FIGURES_DIR, PROCESSED_DIR
+from src.fig_maps import (RAYON_LW, draw_rayon_borders, draw_water,
+                          land_polygon, load_water)
 
 OUT_PATH = FIGURES_DIR / "fig3_frequency.png"
-FIG_SIZE = (10, 9)
+FIG_SIZE = (10, 9.5)
 DPI = 300
 CMAP = "YlOrBr"  # послідовна палітра, безпечна для дальтоніків
-LEVELS = np.arange(0, 55, 5)  # межі класів, %
-# Підписи «1 рік із N» біля відповідних частот (частка = 100/N).
-ONE_IN_N = {50: "1 рік із 2", 100 / 3: "1 рік із 3", 25: "1 рік із 4"}
-SOURCE = "Дані: TerraClimate (1958–2025), межі © OpenStreetMap contributors"
-FONT_TITLE, FONT_LABEL, FONT_TICK, FONT_SRC = 22, 16, 14, 12
-FONT_RAYON = 16
-# Зсув підписів (градуси) там, де representative_point двох районів надто близькі
-LABEL_SHIFT = {"Первомайський район": (0.05, 0.14), "Вознесенський район": (0.05, -0.08)}
-# Райони в підзаголовку: північ і південь (за summary.json / T06)
-NORTH = ["Первомайський", "Вознесенський"]
-SOUTH = ["Миколаївський", "Баштанський"]
-
-
-def land_polygon(ds):
-    """Полігон суходолу: об'єднання квадратів сітки, де land_mask == 1."""
-    dlat = abs(float(ds.lat[1] - ds.lat[0]))
-    dlon = abs(float(ds.lon[1] - ds.lon[0]))
-    sq = [
-        box(lo - dlon / 2, la - dlat / 2, lo + dlon / 2, la + dlat / 2)
-        for la in ds.lat.values
-        for lo in ds.lon.values
-        if ds.land_mask.sel(lat=la, lon=lo) == 1
-    ]
-    # Невеликий buffer склеює квадрати без швів: без нього через похибки
-    # float усередині контуру з'являються зайві лінії.
-    return unary_union(sq).buffer(1e-6).buffer(-1e-6)
+# Фіксована шкала 0–50 %: колір залежить лише від самої частки, без рангів,
+# тож різниця 29,1 проти 35,2 % виглядає такою малою, якою вона є.
+FREQ_MIN, FREQ_MAX = 0.0, 50.0
+# Позначки легенди: частка, % (підпис «1 рік із N» рахується як 100/частка).
+LEGEND_TICKS = [(0.0, "0 %"), (25.0, "25,0 % = 1 рік із 4"),
+                (50.0, "50,0 % = 1 рік із 2")]
+TITLE = "Посуха — проблема всієї області"
+SOURCE = "Дані: TerraClimate (1958–2025), межі й ріки © OpenStreetMap contributors"
+EXPLANATION = ("Тут рахуються всі роки, коли індекс посухи нижче −2, разом із тими, коли "
+               "сухо лише за індексом,\nтому частіше, ніж «1 рік із 4» для підтверджених посух.")
+FONT_TITLE, FONT_RAYON, FONT_TEXT, FONT_SRC = 22, 18, 16, 12
+MEAN_LAT = 47.0  # для співвідношення сторін карти
+MARGIN = 0.05    # запас навколо суходолу, градуси
+# Зсув підписів (градуси) від representative_point, де підписи надто близькі
+LABEL_SHIFT = {"Первомайський район": (0.05, 0.12), "Вознесенський район": (0.05, -0.08)}
 
 
 def fmt(x, digits):
@@ -71,64 +61,59 @@ def make_frequency_map():
         "figure.facecolor": "white",
         "savefig.facecolor": "white",
     })
-    ds = xr.open_dataset(PROCESSED_DIR / "drought_frequency.nc")
+    ds = xr.open_dataset(PROCESSED_DIR / "season_cells.nc")
     with open(PROCESSED_DIR / "summary.json", encoding="utf-8") as f:
         rayon_stats = json.load(f)["spatial"]["rayons"]
 
-    land = land_polygon(ds)
+    land = land_polygon(ds["lon"].values, ds["lat"].values, ds["land_mask"].values)
     rayons = gpd.read_file(BOUNDARIES_DIR / "mykolaiv_rayons.geojson")
+    rivers, water = load_water(land, rayons)
     rayons["geometry"] = rayons.geometry.intersection(land)
 
-    freq = ds.drought_frequency.where(ds.land_mask == 1) * 100  # у %
-    norm = BoundaryNorm(LEVELS, plt.get_cmap(CMAP).N)
+    # Колір за точним значенням частки на фіксованій шкалі.
+    pcts = {n: rayon_stats[n]["mean_frequency_pct"] for n in rayons["name"]}
+    cmap = plt.get_cmap(CMAP)
+    norm = Normalize(FREQ_MIN, FREQ_MAX)
+    colors = {n: cmap(norm(v)) for n, v in pcts.items()}
 
     fig = plt.figure(figsize=FIG_SIZE)
-    ax = fig.add_axes([0.0, 0.17, 0.72, 0.75])
-    cax = fig.add_axes([0.74, 0.22, 0.04, 0.62])
-    mesh = ax.pcolormesh(ds.lon, ds.lat, freq, cmap=CMAP, norm=norm,
-                         shading="nearest")
-    rayons.boundary.plot(ax=ax, color="#333333", linewidth=1.2)
-    gpd.GeoSeries([land]).boundary.plot(ax=ax, color="black", linewidth=1.6)
+    ax = fig.add_axes([0.0, 0.17, 1.0, 0.75])
+    rayons.plot(ax=ax, color=[colors[n] for n in rayons["name"]], edgecolor="none")
+    draw_rayon_borders(ax, rayons)
+    gpd.GeoSeries([land]).boundary.plot(ax=ax, color="black", linewidth=RAYON_LW)
+    draw_water(ax, rivers, water)
 
     # Підписи районів: representative_point лежить гарантовано всередині району.
     halo = [pe.withStroke(linewidth=4, foreground="white")]
     for _, row in rayons.iterrows():
-        st = rayon_stats[row["name"]]
-        pct = st["mean_frequency_pct"]  # точне значення; округлюємо лише при показі
+        pct = pcts[row["name"]]  # точне значення; округлюємо лише при показі
         n = 100 / pct
         short = row["name"].replace(" район", "")
         p = row.geometry.representative_point()
         dx, dy = LABEL_SHIFT.get(row["name"], (0, 0))
-        ax.text(p.x + dx, p.y + dy, f"{short}\n{fmt(pct, 1)} % років\n≈1 рік із {fmt(n, 2)}",
-                ha="center", va="center", fontsize=FONT_RAYON,
-                fontweight="bold", color="black", path_effects=halo)
+        ax.text(p.x + dx, p.y + dy, short, ha="center", va="bottom",
+                fontsize=FONT_RAYON, fontweight="bold", color="black",
+                path_effects=halo)
+        ax.text(p.x + dx, p.y + dy, f"1 рік із {fmt(n, 2)}\n({fmt(pct, 1)} % років)",
+                ha="center", va="top", fontsize=FONT_TEXT, color="black",
+                path_effects=halo)
 
-    ax.set_aspect(1 / np.cos(np.deg2rad(float(ds.lat.mean()))))
+    minx, miny, maxx, maxy = land.bounds
+    ax.set_aspect(1 / cos(radians(MEAN_LAT)))
+    ax.set_xlim(minx - MARGIN, maxx + MARGIN)
+    ax.set_ylim(miny - MARGIN, maxy + MARGIN)
     ax.set_axis_off()  # без осей координат
 
-    cb = fig.colorbar(mesh, cax=cax, ticks=LEVELS, spacing="proportional")
-    cb.set_label("частка років із посухою, %", fontsize=FONT_LABEL)
-    cb.ax.yaxis.set_label_position("left")
-    cb.ax.yaxis.labelpad = 12
-    cb.ax.tick_params(labelsize=FONT_TICK)
-    # Додаткові підписи праворуч від шкали: «1 рік із N»
-    for pct, text in ONE_IN_N.items():
-        cb.ax.annotate(f"{text} ({pct:.0f} %)", xy=(1.0, pct / LEVELS[-1]),
-                       xycoords="axes fraction", xytext=(48, 0),
-                       textcoords="offset points", fontsize=FONT_TICK,
-                       va="center", annotation_clip=False)
-        cb.ax.axhline(pct, color="gray", linewidth=1)
+    # Проста легенда: одна неперервна смужка 0–50 % з трьома позначками.
+    cax = fig.add_axes([0.25, 0.075, 0.5, 0.025])
+    cb = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax,
+                      orientation="horizontal",
+                      ticks=[t for t, _ in LEGEND_TICKS])
+    cb.ax.set_xticklabels([lbl for _, lbl in LEGEND_TICKS])
+    cb.ax.tick_params(labelsize=FONT_SRC + 2)
 
-    fig.suptitle("Посуха — проблема всієї області", fontsize=FONT_TITLE,
-                 fontweight="bold", y=0.96)
-    def pct_of(name):
-        return fmt(rayon_stats[f"{name} район"]["mean_frequency_pct"], 1)
-    n1, n2 = (pct_of(x) for x in NORTH)
-    s1, s2 = (pct_of(x) for x in SOUTH)
-    fig.text(0.36, 0.13,
-             f"На півночі ({NORTH[0]}, {NORTH[1]}) — трохи частіше: "
-             f"{n1} % і {n2} % років\nпроти {s1} % і {s2} % на півдні.",
-             ha="center", va="top", fontsize=FONT_LABEL)
+    fig.suptitle(TITLE, fontsize=FONT_TITLE, fontweight="bold", y=0.96)
+    fig.text(0.5, 0.16, EXPLANATION, ha="center", va="top", fontsize=FONT_TEXT)
     fig.text(0.0, 0.0, SOURCE, fontsize=FONT_SRC, color="gray",
              ha="left", va="bottom")
     fig.savefig(OUT_PATH, dpi=DPI, bbox_inches="tight", facecolor="white")

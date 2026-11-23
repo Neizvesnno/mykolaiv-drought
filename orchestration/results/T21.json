@@ -1,0 +1,44 @@
+{
+  "task_id": "T21",
+  "status": "done",
+  "summary": "src/rivers.py одним запитом до Overpass (після двох HTTP 502 на тому ж endpoint) завантажив ріки й лимани, обрізав по контуру області з буфером 0,05°, спростив до 0,001° і зберіг mykolaiv_rivers.geojson (5 рік) та mykolaiv_water.geojson (1 лиман). Південний Буг проходить через Первомайськ, Вознесенськ і Миколаїв (< 3 км). Інгул у OSM іде за ~12 км на захід від Баштанки, тож підпис fig2 неточний. Дніпро не перетинає область, Дніпровсько-Бузький і Бузький лимани в запиті не знайдені.",
+  "files": [
+    {"path": "src/rivers.py", "purpose": "Overpass-запит, кеш, обрізання по контуру, спрощення, GeoJSON, перевірка відстаней до міст", "committed": false},
+    {"path": "data/boundaries/mykolaiv_rivers.geojson", "purpose": "Лінії рік: Південний Буг, Інгул, Інгулець, Мертвовод, Висунь; поля name, length_km_in_area, source, license", "committed": false},
+    {"path": "data/boundaries/mykolaiv_water.geojson", "purpose": "Полігон Тилігульського лиману; поля name, area_km2_in_area, source, license", "committed": false},
+    {"path": "data/raw/overpass_mykolaiv_rivers.json", "purpose": "Кеш сирої відповіді Overpass (недовірені дані, 1,48 МБ)", "committed": false}
+  ],
+  "checks": [
+    {"criterion_id": "A1", "passed": true, "evidence": "Імена: Південний Буг 331.559513 км, Інгул 202.957557 км, Інгулець 149.316327 км (в межах області+буфер 0,05°, EPSG:6933), ще Мертвовод 105.849653, Висунь 196.820270. Контрольна картинка: /private/tmp/claude-501/-Users-lucky777strike-Desktop-work-test-case/78833e3c-761a-4635-9d1d-461d124ec454/scratchpad/t21/check.png, лінії лежать в області. Дніпро відсутній у файлі: у кеші 14 сегментів, усі у Херсонській обл. (lat 46.50-46.78, lon 32.29-33.33), перетин з контуром порожній."},
+    {"criterion_id": "A2", "passed": false, "evidence": "Розмір: rivers 41300 + water 6231 байт, разом < 2 МБ (виконано). Але у water лише 'Тилігульський лиман' (128.434397 км²); Дніпровсько-Бузький і Бузький лимани не знайдені: у відповіді Overpass natural=water з такими назвами немає, лише Тилігульський (relation). Імовірно в OSM вони тегуються інакше (natural=bay тощо); другий запит заборонено, тому не перевіряв."},
+    {"criterion_id": "A3", "passed": true, "evidence": "Повторний запуск бере кеш; md5 mykolaiv_rivers.geojson однаковий між запусками (692a67764dfa26039b38c6e7d164fa4e), water так само (перевірено md5 до і після)."}
+  ],
+  "facts": [
+    {"claim": "Відстань від точки міста до лінії Південного Бугу в OSM: Первомайськ 0.065996 км, Вознесенськ 0.343308 км, Миколаїв 2.556191 км (< 3 км); координати міст задані мною в CHECK_POINTS приблизно", "source": "вивід src/rivers.py, 23.11.2026", "verified": true},
+    {"claim": "Інгул у OSM: найближча точка до Баштанки (32.44E 47.40N) на відстані 12.273307 км (точка лінії ~32.315E 47.428N); сегмент Інгулу тягнеться lat 46.97-47.85, lon до 32.406", "source": "вивід src/rivers.py і перевірка геометрії, 23.11.2026", "verified": true},
+    {"claim": "Дані OSM поширюються за ліцензією ODbL 1.0, потрібна атрибуція © OpenStreetMap contributors", "source": "https://www.openstreetmap.org/copyright; поле license у GeoJSON", "verified": false},
+    {"claim": "У відповіді Overpass присутні: way waterway=river для Південний Буг (51), Висунь (51), Інгул (38), Мертвовод (24), Дніпро (14), Інгулець (14) та relation natural=water Тилігульський лиман (1)", "source": "data/raw/overpass_mykolaiv_rivers.json", "verified": true}
+  ],
+  "issues": [
+    "Інгул у OSM проходить за ~12 км на захід від Баштанки (Баштанка не на самому Інгулі за даними OSM). Підпис на fig2 'Інгул через Баштанку' варто змінити (наприклад 'біля Баштанки') або перевірити. Мій допуск 3 км не виконано для цього міста.",
+    "Дніпровсько-Бузький і Бузький лимани відсутні: не знайдені як natural=water з цими назвами. Для карти лишається Тилігульський лиман. Для решти потрібен новий запит (natural=bay або water=lagoon/estuary), у цій задачі заборонений. Контур області (T03) сам сягає моря.",
+    "Дніпро повністю поза контуром області (Херсонська обл.), тому його немає у файлі; решта його сегментів у кеші.",
+    "Перший endpoint дав HTTP 502 двічі, третя спроба пройшла; fallback (kumi.systems) не знадобився. Запит по суті один успішний.",
+    "Лінії обрізані по контуру області + буфер 0,05° (~5 км), тож Інгулець і Висунь показані лише на сході; Південний Буг закінчується на межі контуру біля 46.6N, нижче Миколаєва (лиман не відображений).",
+    "length_km_in_area і area_km2_in_area зберігаються з повною точністю; округлювати лише на показі."
+  ],
+  "handoff": [
+    "Файли: data/boundaries/mykolaiv_rivers.geojson (LineString/MultiLineString, поля name, length_km_in_area, source, license) і mykolaiv_water.geojson (polygon, name, area_km2_in_area), EPSG:4326.",
+    "Шляхи як константи RIVERS_FILE, WATER_FILE у src/rivers.py (config.py не змінювався).",
+    "Ріки: Південний Буг, Інгул, Інгулець, Мертвовод, Висунь. Дніпра немає. Лиман один: Тилігульський.",
+    "Не писати на карті, що Інгул тече через Баштанку: у даних OSM лінія в ~12 км на захід.",
+    "Атрибуція на картах: © OpenStreetMap contributors, ODbL 1.0.",
+    "Запуск: .venv/bin/python src/rivers.py з кореня; кеш data/raw/overpass_mykolaiv_rivers.json."
+  ],
+  "commands_run": [
+    ".venv/bin/python src/rivers.py (двічі, другий раз з кешем; потім ще двічі після виправлення порожньої геометрії)",
+    "md5 порівняння виходів",
+    "matplotlib контрольна картинка у scratchpad/t21",
+    "python3 orchestration/validate.py T21"
+  ]
+}

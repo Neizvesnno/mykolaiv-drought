@@ -1,0 +1,38 @@
+{
+  "id": "T21",
+  "day": "2026-11-23",
+  "role": "geodata",
+  "title": "Ріки й лимани Миколаївщини з OpenStreetMap",
+  "depends_on": [
+    "T03"
+  ],
+  "inputs": [
+    "src/boundaries.py",
+    "data/boundaries/"
+  ],
+  "instructions": "Павло (23.11) хоче бачити на картах ріки синім для орієнтації і дозволив узяти їх з OpenStreetMap через Overpass, як межі районів у T03 (src/boundaries.py — візьми звідти підхід: кеш у data/raw/, повтори при помилці, ліцензія ODbL). Напиши src/rivers.py: (1) лінії великих рік у межах області: Південний Буг, Інгул, Інгулець, Дніпро (там, де він у bbox), за бажанням ще 2–3 помітні притоки, якщо вони не захаращують карту; (2) полігони великих водойм: Дніпровсько-Бузький, Бузький і Тилігульський лимани (natural=water). Кеш сирої відповіді data/raw/overpass_mykolaiv_rivers.json. Обріж по bbox області з невеликим запасом (контур області — data/boundaries), спрости геометрію (точність ~100 м достатньо для карти), збережи data/boundaries/mykolaiv_rivers.geojson (лінії, атрибут name) і data/boundaries/mykolaiv_water.geojson (полігони, name). Шлях до файлів задай константами в src/rivers.py (config.py не чіпай — його паралельно змінює T20). Один запит до Overpass, без масового завантаження; інших джерел не використовуй. Не чіпай fig_*.py.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "mykolaiv_rivers.geojson містить Південний Буг, Інгул і Інгулець, які проходять через область",
+      "how": "Supervisor відкриває файл, дивиться імена, довжини в межах області і малює контрольну картинку з межею області"
+    },
+    {
+      "id": "A2",
+      "check": "mykolaiv_water.geojson містить лимани, файли легкі (< 2 МБ разом)",
+      "how": "ls -l і перелік name"
+    },
+    {
+      "id": "A3",
+      "check": "Скрипт відтворюваний: повторний запуск бере кеш і дає той самий результат",
+      "how": "запустити двічі"
+    }
+  ],
+  "outputs": [
+    "src/rivers.py",
+    "data/boundaries/mykolaiv_rivers.geojson",
+    "data/boundaries/mykolaiv_water.geojson"
+  ],
+  "fallback": "Якщо Overpass недоступний — один повтор через інший офіційний endpoint (overpass.kumi.systems); якщо й він ні — blocked.",
+  "max_attempts": 2
+}

@@ -1,0 +1,47 @@
+{
+  "id": "T22",
+  "day": "2026-11-23",
+  "role": "viz",
+  "title": "Карти: чорні межі, ріки, спрощена fig3 по районах",
+  "depends_on": [
+    "T09",
+    "T10",
+    "T12",
+    "T21"
+  ],
+  "inputs": [
+    "src/fig_maps.py",
+    "src/fig_frequency.py",
+    "src/slides_draft.py",
+    "data/boundaries/mykolaiv_rivers.geojson",
+    "data/boundaries/mykolaiv_water.geojson",
+    "data/processed/summary.json",
+    "data/processed/drought_frequency.nc"
+  ],
+  "instructions": "Рішення Павла (23.11) після перегляду рисунків. fig2 (src/fig_maps.py) і fig3 (src/fig_frequency.py): межі районів чорні (замість білих); щоб їх було видно на темно-коричневому, можна тонкий білий ореол (patheffects), але сама лінія чорна; ріки і лимани синім #0072B2 (лінії ~1,2–1,5, лимани заливкою того ж синього), підпис 2–3 головних рік (Південний Буг, Інгул, Інгулець) там, де не заважає. fig3 переробити й спростити: Павло каже, що «частка років з посухою у %» зображена незрозуміло. Метрику лишаємо ту саму — частота за індексом (PDSI ≤ −2), spatial.rayons.*.mean_frequency_pct у summary.json (Павло так вирішив) — але показуємо по 4 районах: кожен район залитий одним кольором (YlOrBr, 4 відтінки від меншої до більшої частоти, без шкали з 10 класами), у кожному районі великий підпис: назва, «1 рік із N» (N = 100 / частка, 2 знаки, кома) і «(X,X % років)». Під картою одне речення простою мовою: тут рахуються всі роки, коли індекс посухи нижче −2, разом із тими, коли сухо лише за індексом, тому частіше, ніж «1 рік із 4» для підтверджених посух. Без клітинкової сітки на fig3 (просторову деталь показує fig2). Заголовок fig3: «Посуха — проблема всієї області». Рядок джерела: «Дані: TerraClimate (1958–2025), межі й ріки © OpenStreetMap contributors». Залишок з T12: підпис «(33 %)» на старій шкалі зникає разом зі шкалою. Після рисунків перезапусти .venv/bin/python -m src.slides_draft (у slides_draft.py нічого не міняй, крім того, що зламалось би), щоб чернетка мала нові рисунки. Превʼю для себе — у scratchpad /private/tmp/claude-501/-Users-lucky777strike-Desktop-work-test-case/78833e3c-761a-4635-9d1d-461d124ec454/scratchpad/t22/, не в репо. Не чіпай summary.json, src/drought_years.py, docs/, prompts.md.",
+  "acceptance": [
+    {
+      "id": "A1",
+      "check": "На fig2 і fig3 межі районів чорні, ріки й лимани сині, видно на всіх 4 панелях fig2",
+      "how": "переглянути PNG"
+    },
+    {
+      "id": "A2",
+      "check": "fig3: 4 райони, підписи «1 рік із N» і % збігаються з summary.json (1 рік із 2,84 / 2,99 / 3,25 / 3,43; 35,2 / 33,4 / 30,7 / 29,1 %), є пояснювальне речення",
+      "how": "Supervisor перераховує 100/частка з summary.json"
+    },
+    {
+      "id": "A3",
+      "check": "Чернетка slides/presentation_draft.pdf перезібрана з новими рисунками",
+      "how": "відрендерити PDF"
+    }
+  ],
+  "outputs": [
+    "src/fig_maps.py",
+    "src/fig_frequency.py",
+    "figures/fig2_maps.png",
+    "figures/fig3_frequency.png",
+    "slides/presentation_draft.pdf"
+  ],
+  "max_attempts": 2
+}

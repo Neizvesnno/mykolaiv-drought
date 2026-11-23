@@ -1,0 +1,80 @@
+{
+ "task_id": "T22",
+ "status": "done",
+ "summary": "fig2: межі районів чорні (lw 1,3) з тонким білим ореолом, ріки (#0072B2, lw 1,4) і Тилігульський лиман (заливка) на всіх 4 панелях, підписані Південний Буг, Інгул, Інгулець. fig3 переписано: 4 райони однією заливкою (YlOrBr, фіксована шкала Normalize(0, 50) за самою часткою, без рангів) і проста легенда 0 / 25,0 % = 1 рік із 4 / 50,0 % = 1 рік із 2, підписи назва / 1 рік із N / (X,X % років), без сітки, пояснювальне речення, нове джерело. Чернетка slides/presentation_draft.pdf перезібрана (0,59 МБ).",
+ "files": [
+  {
+   "path": "src/fig_maps.py",
+   "purpose": "Додано load_water(), draw_water(), draw_rayon_borders(); чорні межі з ореолом, ріки, лиман",
+   "committed": false
+  },
+  {
+   "path": "src/fig_frequency.py",
+   "purpose": "Нова спрощена fig3 по районах",
+   "committed": false
+  },
+  {
+   "path": "figures/fig2_maps.png",
+   "purpose": "Карти 4 найсухіших сезонів із ріками",
+   "committed": false
+  },
+  {
+   "path": "figures/fig3_frequency.png",
+   "purpose": "Частота посух по 4 районах",
+   "committed": false
+  },
+  {
+   "path": "slides/presentation_draft.pdf",
+   "purpose": "Перезібрана чернетка",
+   "committed": false
+  }
+ ],
+ "checks": [
+  {
+   "criterion_id": "A1",
+   "passed": true,
+   "evidence": "Переглянуто PNG: на fig2 чорні межі з білим ореолом і сині ріки/лиман видні на всіх 4 панелях; на fig3 так само. Перевірка кольорів: у 4 найсухіших роках клітинок PDSI > 0 серед 2651 суходільних — 0 (2025, 2007, 2020, 2024), максимум по роках −3,73 / −4,04 / −4,55 / −2,99, тож синя лінія не плутається з бірюзовим кінцем BrBG."
+  },
+  {
+   "criterion_id": "A2",
+   "passed": true,
+   "evidence": "N = 100/mean_frequency_pct у коді з summary.json: Первомайський 1 рік із 2,84 (35,2 %), Вознесенський 2,99 (33,4 %), Миколаївський 3,25 (30,7 %), Баштанський 3,43 (29,1 %); у PNG підписи саме такі. Є речення про всі роки з індексом нижче −2 і «1 рік із 4» для підтверджених."
+  },
+  {
+   "criterion_id": "A3",
+   "passed": true,
+   "evidence": ".venv/bin/python -m src.slides_draft: «Збережено .../slides/presentation_draft.pdf (0.58 МБ)». Сторінку 1 відрендерено qlmanage; сторінки 2-3 окремо не відкривались (немає рендерера), вони беруть нові PNG через ту саму функцію."
+  }
+ ],
+ "facts": [
+  {
+   "claim": "Частоти по районах з summary.json: 35,2 / 33,4 / 30,7 / 29,1 %",
+   "source": "data/processed/summary.json spatial.rayons",
+   "verified": true
+  },
+  {
+   "claim": "У fig2 нема клітинок PDSI > 0 у 4 найсухіших роках",
+   "source": "xarray по season_cells.nc, land_mask == 1",
+   "verified": true
+  }
+ ],
+ "issues": [
+  "Лиман обрізано по об'єднанню районів, а не по суходолу: клітинки води замасковані, тож по суходолу він зник би. Видно лише невеликий фрагмент на західному краю Миколаївського району; решта лиману поза областю. Бузького лиману в даних нема, його місце біле.",
+  "Ріки обрізані по суходолу, тому Південний Буг закінчується біля південної межі суходолу, гирло не показане.",
+  "Підпис Інгулець на fig2 стоїть поза контуром праворуч, Інгул біля північної межі; підписи ставляться в найближчій до заданої точки лінії ріки (RIVER_LABELS), координати підбиті візуально.",
+  "fig3 більше не читає drought_frequency.nc; land_mask береться з season_cells.nc. Рядок джерела на fig3 зміщений від лівого краю через bbox_inches=tight.",
+  "slides_draft.py не змінювався; текст слайда 3 («Частка років із посухою, %» + 4 райони) лишився старий, рисунок підтягнувся новий.",
+  "За правкою Supervisor: кольори fig3 тепер за фіксованою шкалою 0–50 %, усі 4 райони схожого помаранчевого відтінку; рядок джерела fig2 доповнено «й ріки»."
+ ],
+ "handoff": [
+  "src/fig_maps.py експортує load_water(land, rayons), draw_water(ax, rivers, water, labels=True), draw_rayon_borders(ax, geoms); fig_frequency імпортує їх звідти.",
+  "Колір ріки WATER_COLOR = #0072B2; межі RAYON_COLOR чорні + білий ореол.",
+  "Запуск: .venv/bin/python -m src.fig_maps; .venv/bin/python -m src.fig_frequency; .venv/bin/python -m src.slides_draft."
+ ],
+ "commands_run": [
+  ".venv/bin/python -m src.fig_maps",
+  ".venv/bin/python -m src.fig_frequency",
+  ".venv/bin/python -m src.slides_draft",
+  "python3 orchestration/validate.py T22"
+ ]
+}
